@@ -1,0 +1,107 @@
+version: "3.9"
+
+services:
+  nginx:
+    build: ./nginx
+    ports:
+      - "80:80"
+    depends_on:
+      - user-service
+      - wishlist-service
+      - reservation-service
+      - frontend
+    networks:
+      - wishlist-net
+
+  frontend:
+    build: ./frontend
+    networks:
+      - wishlist-net
+
+  user-service:
+    build: ./services/user-service
+    environment:
+      DATABASE_URL: postgresql+asyncpg://user_svc:${DB_USER_SVC_PASSWORD}@postgres:5432/user_db
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ALGORITHM: HS256
+      JWT_EXPIRE_MINUTES: 60
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - wishlist-net
+    volumes:
+      - ./services/user-service:/app
+    restart: unless-stopped
+
+  wishlist-service:
+    build: ./services/wishlist-service
+    environment:
+      DATABASE_URL: postgresql+asyncpg://wishlist_svc:${DB_WISHLIST_SVC_PASSWORD}@postgres:5432/wishlist_db
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - wishlist-net
+    volumes:
+      - ./services/wishlist-service:/app
+    restart: unless-stopped
+
+  reservation-service:
+    build: ./services/reservation-service
+    environment:
+      DATABASE_URL: postgresql+asyncpg://reserv_svc:${DB_RESERV_SVC_PASSWORD}@postgres:5432/reserv_db
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - wishlist-net
+    volumes:
+      - ./services/reservation-service:/app
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - wishlist-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis-data:/data
+    networks:
+      - wishlist-net
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+networks:
+  wishlist-net:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  redis-data:
