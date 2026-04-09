@@ -31,10 +31,11 @@ client.interceptors.response.use(
     const original = err.config;
 
     // Not 401, or this is already a retry, or it's the refresh endpoint itself
+    const publicEndpoints = ["/users/refresh", "/users/login", "/users/register"];
     if (
       err.response?.status !== 401 ||
       original._retry ||
-      original.url === "/users/refresh"
+      publicEndpoints.some((ep) => original.url === ep)
     ) {
       return Promise.reject(err);
     }
