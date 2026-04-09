@@ -10,12 +10,13 @@ from app.services.user_service import UserService
 router = APIRouter(prefix="/api/users")
 
 
-@router.post("/register", response_model=UserResponse, status_code=201)
+@router.post("/register", response_model=TokenResponse, status_code=201)
 async def register(
     data: UserRegisterRequest,
     db: AsyncSession = Depends(get_db),
-) -> UserResponse:
-    return await UserService(db).register(data)
+    redis: Redis = Depends(get_redis),
+) -> TokenResponse:
+    return await UserService(db, redis).register(data)
 
 
 @router.post("/login", response_model=TokenResponse)

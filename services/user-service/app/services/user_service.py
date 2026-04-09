@@ -18,12 +18,18 @@ class UserService:
         self._repo = UserRepository(session)
         self._redis = redis
 
-    async def register(self, data: UserRegisterRequest) -> UserResponse:
+    async def register(self, data: UserRegisterRequest) -> TokenResponse:
         if await self._repo.get_by_email(data.email):
             raise ConflictError("Email already registered")
         password_hash = _pwd_context.hash(data.password)
         user = await self._repo.create(data.email, password_hash, data.name)
-        return UserResponse.model_validate(user)
+        user_id = str(user.id)
+        refresh_token, jti = create_refresh_token(user_id)
+        await store_refresh_token(self._redis, jti, user_id)
+        return TokenResponse(
+            access_token=create_access_token(user_id),
+            refresh_token=refresh_token,
+        )
 
     async def login(self, data: UserLoginRequest) -> TokenResponse:
         user = await self._repo.get_by_email(data.email)

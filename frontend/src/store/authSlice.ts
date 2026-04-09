@@ -26,6 +26,15 @@ export const fetchMe = createAsyncThunk("auth/fetchMe", async () => {
   return user.name;
 });
 
+type ApiError = { response?: { data?: { detail?: string | Array<{ msg: string }> } } };
+
+function extractErrorMessage(e: unknown, fallback: string): string {
+  const detail = (e as ApiError).response?.data?.detail;
+  if (!detail) return fallback;
+  if (Array.isArray(detail)) return detail.map((d) => d.msg).join(", ");
+  return detail;
+}
+
 export const login = createAsyncThunk(
   "auth/login",
   async (data: { email: string; password: string }, { rejectWithValue }) => {
@@ -34,8 +43,7 @@ export const login = createAsyncThunk(
       saveTokens(res.access_token, res.refresh_token);
       return res.access_token;
     } catch (e: unknown) {
-      const err = e as { response?: { data?: { detail?: string } } };
-      return rejectWithValue(err.response?.data?.detail ?? "Ошибка входа");
+      return rejectWithValue(extractErrorMessage(e, "Ошибка входа"));
     }
   }
 );
@@ -51,10 +59,7 @@ export const register = createAsyncThunk(
       saveTokens(res.access_token, res.refresh_token);
       return res.access_token;
     } catch (e: unknown) {
-      const err = e as { response?: { data?: { detail?: string } } };
-      return rejectWithValue(
-        err.response?.data?.detail ?? "Ошибка регистрации"
-      );
+      return rejectWithValue(extractErrorMessage(e, "Ошибка регистрации"));
     }
   }
 );
