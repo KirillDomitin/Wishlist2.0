@@ -78,9 +78,12 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_USER_SVC_PASSWORD: ${DB_USER_SVC_PASSWORD}
+      DB_WISHLIST_SVC_PASSWORD: ${DB_WISHLIST_SVC_PASSWORD}
+      DB_RESERV_SVC_PASSWORD: ${DB_RESERV_SVC_PASSWORD}
     volumes:
       - postgres-data:/var/lib/postgresql/data
-      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./postgres/init.sh:/docker-entrypoint-initdb.d/init.sh
     networks:
       - wishlist-net
     healthcheck:
