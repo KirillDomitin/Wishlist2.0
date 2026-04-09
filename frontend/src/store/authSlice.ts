@@ -16,6 +16,11 @@ const initialState: AuthState = {
   error: null,
 };
 
+function saveTokens(access_token: string, refresh_token: string) {
+  localStorage.setItem("token", access_token);
+  localStorage.setItem("refresh_token", refresh_token);
+}
+
 export const fetchMe = createAsyncThunk("auth/fetchMe", async () => {
   const user = await usersApi.getMe();
   return user.name;
@@ -26,6 +31,7 @@ export const login = createAsyncThunk(
   async (data: { email: string; password: string }, { rejectWithValue }) => {
     try {
       const res = await authApi.login(data);
+      saveTokens(res.access_token, res.refresh_token);
       return res.access_token;
     } catch (e: unknown) {
       const err = e as { response?: { data?: { detail?: string } } };
@@ -42,6 +48,7 @@ export const register = createAsyncThunk(
   ) => {
     try {
       const res = await authApi.register(data);
+      saveTokens(res.access_token, res.refresh_token);
       return res.access_token;
     } catch (e: unknown) {
       const err = e as { response?: { data?: { detail?: string } } };
@@ -57,9 +64,14 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     logout(state) {
+      const refreshToken = localStorage.getItem("refresh_token");
+      if (refreshToken) {
+        authApi.logout(refreshToken).catch(() => {});
+      }
       state.token = null;
       state.name = null;
       localStorage.removeItem("token");
+      localStorage.removeItem("refresh_token");
     },
     clearError(state) {
       state.error = null;
@@ -74,7 +86,6 @@ const authSlice = createSlice({
       .addCase(login.fulfilled, (state, action) => {
         state.loading = false;
         state.token = action.payload;
-        localStorage.setItem("token", action.payload);
       })
       .addCase(fetchMe.fulfilled, (state, action) => {
         state.name = action.payload;
@@ -90,7 +101,6 @@ const authSlice = createSlice({
       .addCase(register.fulfilled, (state, action) => {
         state.loading = false;
         state.token = action.payload;
-        localStorage.setItem("token", action.payload);
       })
       .addCase(register.rejected, (state, action) => {
         state.loading = false;

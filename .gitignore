@@ -1,5 +1,6 @@
 .env
 .claude/settings.local.json
+docker-compose.override.yml
 __pycache__/
 *.py[cod]
 *.egg-info/
