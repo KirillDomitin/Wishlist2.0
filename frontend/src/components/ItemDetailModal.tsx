@@ -7,6 +7,7 @@ import {
   Users,
   CheckCircle,
   Gift,
+  LogIn,
 } from "lucide-react";
 import type { WishlistItem } from "../api/wishlists";
 
@@ -14,9 +15,10 @@ interface Props {
   item: WishlistItem | null;
   onClose: () => void;
   onReserve?: (itemId: string, quantity: number) => Promise<void>;
+  isLoggedIn?: boolean;
 }
 
-export function ItemDetailModal({ item, onClose, onReserve }: Props) {
+export function ItemDetailModal({ item, onClose, onReserve, isLoggedIn = true }: Props) {
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(false);
 
@@ -136,7 +138,17 @@ export function ItemDetailModal({ item, onClose, onReserve }: Props) {
             )}
 
             {/* Reserve action */}
-            {!item.is_fully_reserved && onReserve ? (
+            {!item.is_fully_reserved && onReserve && !isLoggedIn ? (
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={handleReserve}
+                className="btn-primary w-full justify-center py-3 text-base"
+              >
+                <LogIn className="w-5 h-5" />
+                Войти и забронировать
+              </motion.button>
+            ) : !item.is_fully_reserved && onReserve ? (
               <div className="space-y-3">
                 {item.target_quantity > 1 && (
                   <div>

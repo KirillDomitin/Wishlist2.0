@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Gift, Mail, Lock, ArrowRight, Loader2 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
@@ -9,20 +9,22 @@ import { Sparkles } from "../components/Sparkles";
 export default function LoginPage() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirect = searchParams.get("redirect") || "/";
   const { loading, error, token } = useAppSelector((s) => s.auth);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   useEffect(() => {
-    if (token) navigate("/");
+    if (token) navigate(redirect, { replace: true });
     return () => { dispatch(clearError()); };
   }, [token]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const res = await dispatch(login({ email, password }));
-    if (res.meta.requestStatus === "fulfilled") navigate("/");
+    if (res.meta.requestStatus === "fulfilled") navigate(redirect, { replace: true });
   };
 
   return (
@@ -99,7 +101,10 @@ export default function LoginPage() {
 
         <p className="text-center text-sm text-gray-500 mt-6">
           Нет аккаунта?{" "}
-          <Link to="/register" className="text-purple-600 font-semibold hover:text-purple-700">
+          <Link
+            to={redirect !== "/" ? `/register?redirect=${encodeURIComponent(redirect)}` : "/register"}
+            className="text-purple-600 font-semibold hover:text-purple-700"
+          >
             Зарегистрироваться
           </Link>
         </p>

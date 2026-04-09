@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Gift, Mail, Lock, User, ArrowRight, Loader2 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
@@ -9,6 +9,8 @@ import { Sparkles } from "../components/Sparkles";
 export default function RegisterPage() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirect = searchParams.get("redirect") || "/";
   const { loading, error, token } = useAppSelector((s) => s.auth);
 
   const [name, setName] = useState("");
@@ -16,14 +18,14 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("");
 
   useEffect(() => {
-    if (token) navigate("/");
+    if (token) navigate(redirect, { replace: true });
     return () => { dispatch(clearError()); };
   }, [token]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const res = await dispatch(register({ name, email, password }));
-    if (res.meta.requestStatus === "fulfilled") navigate("/");
+    if (res.meta.requestStatus === "fulfilled") navigate(redirect, { replace: true });
   };
 
   return (
@@ -110,7 +112,10 @@ export default function RegisterPage() {
 
         <p className="text-center text-sm text-gray-500 mt-6">
           Уже есть аккаунт?{" "}
-          <Link to="/login" className="text-purple-600 font-semibold hover:text-purple-700">
+          <Link
+            to={redirect !== "/" ? `/login?redirect=${encodeURIComponent(redirect)}` : "/login"}
+            className="text-purple-600 font-semibold hover:text-purple-700"
+          >
             Войти
           </Link>
         </p>

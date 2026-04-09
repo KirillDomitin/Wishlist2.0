@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Gift, Loader2, Link as LinkIcon } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
@@ -14,6 +14,7 @@ import type { WishlistItem } from "../api/wishlists";
 
 export default function SharedWishlistPage() {
   const { token } = useParams<{ token: string }>();
+  const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { shared, loading } = useAppSelector((s) => s.wishlists);
   const isLoggedIn = !!useAppSelector((s) => s.auth.token);
@@ -28,6 +29,10 @@ export default function SharedWishlistPage() {
   }, [token]);
 
   const handleReserve = async (itemId: string, quantity: number) => {
+    if (!isLoggedIn) {
+      navigate(`/register?redirect=/shared/${token}`);
+      return;
+    }
     const res = await dispatch(createReservation({ item_id: itemId, quantity }));
     if (res.meta.requestStatus === "fulfilled") {
       await fireConfetti();
@@ -131,6 +136,7 @@ export default function SharedWishlistPage() {
         item={activeItem}
         onClose={() => setActiveItem(null)}
         onReserve={handleReserve}
+        isLoggedIn={isLoggedIn}
       />
     </div>
   );
