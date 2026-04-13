@@ -6,7 +6,7 @@ export interface WishlistItem {
   description: string | null;
   url: string | null;
   price: number | null;
-  image_url: string | null;
+  image_urls: string[];
   target_quantity: number;
   reserved_count: number;
   is_fully_reserved: boolean;
@@ -43,7 +43,7 @@ export interface WishlistItemCreate {
   description?: string;
   url?: string;
   price?: number;
-  image_url?: string;
+  image_urls?: string[];
   target_quantity?: number;
 }
 
@@ -52,7 +52,7 @@ export interface WishlistItemUpdate {
   description?: string;
   url?: string;
   price?: number;
-  image_url?: string;
+  image_urls?: string[];
   target_quantity?: number;
 }
 
@@ -105,5 +105,12 @@ export const wishlistApi = {
 
   deleteItem: async (wishlistId: string, itemId: string): Promise<void> => {
     await client.delete(`/wishlists/${wishlistId}/items/${itemId}`);
+  },
+
+  uploadImage: async (file: File): Promise<string> => {
+    const form = new FormData();
+    form.append("file", file);
+    const res = await client.post<{ url: string }>("/wishlists/upload-image", form);
+    return res.data.url;
   },
 };

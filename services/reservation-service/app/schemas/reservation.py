@@ -24,7 +24,7 @@ class ItemSummary(BaseModel):
 
     title: str
     price: Decimal | None
-    image_url: str | None
+    image_urls: list[str]
     target_quantity: int
 
 

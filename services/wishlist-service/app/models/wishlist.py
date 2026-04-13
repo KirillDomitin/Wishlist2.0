@@ -3,7 +3,7 @@ import uuid
 from decimal import Decimal
 
 from sqlalchemy import Boolean, ForeignKey, Integer, Numeric, String, Text
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import ARRAY, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, TimestampMixin
@@ -49,7 +49,7 @@ class WishlistItem(Base, TimestampMixin):
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     url: Mapped[str | None] = mapped_column(String(2048), nullable=True)
     price: Mapped[Decimal | None] = mapped_column(Numeric(10, 2), nullable=True)
-    image_url: Mapped[str | None] = mapped_column(String(2048), nullable=True)
+    image_urls: Mapped[list[str]] = mapped_column(ARRAY(Text), nullable=False, default=list)
     target_quantity: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
     reserved_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 

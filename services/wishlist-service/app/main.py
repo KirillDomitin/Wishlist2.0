@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+from app.api.uploads import router as uploads_router
 from app.api.wishlists import router as wishlists_router
 from app.core.redis_client import close_redis, get_redis, init_redis
 from app.core.streams import StreamConsumer
@@ -35,3 +36,4 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 app = FastAPI(title="Wishlist Service", version="1.0.0", lifespan=lifespan)
 
 app.include_router(wishlists_router)
+app.include_router(uploads_router)

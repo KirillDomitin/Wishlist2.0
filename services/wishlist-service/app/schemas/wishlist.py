@@ -12,7 +12,7 @@ class WishlistItemCreate(BaseModel):
     description: str | None = None
     url: str | None = None
     price: Decimal | None = Field(default=None, ge=0)
-    image_url: str | None = None
+    image_urls: list[str] = Field(default_factory=list)
     target_quantity: int = Field(default=1, ge=1)
 
 
@@ -21,7 +21,7 @@ class WishlistItemUpdate(BaseModel):
     description: str | None = None
     url: str | None = None
     price: Decimal | None = Field(default=None, ge=0)
-    image_url: str | None = None
+    image_urls: list[str] | None = None
     target_quantity: int | None = Field(default=None, ge=1)
 
 
@@ -32,7 +32,7 @@ class WishlistItemResponse(BaseModel):
     description: str | None
     url: str | None
     price: Decimal | None
-    image_url: str | None
+    image_urls: list[str]
     target_quantity: int
     reserved_count: int
     is_fully_reserved: bool

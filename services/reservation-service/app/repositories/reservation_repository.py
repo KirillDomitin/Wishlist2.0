@@ -19,7 +19,7 @@ class ItemReadModelRepository:
         target_quantity: int,
         title: str = "",
         price: Decimal | None = None,
-        image_url: str | None = None,
+        image_urls: list[str] | None = None,
     ) -> None:
         result = await self._session.get(ItemReadModel, item_id)
         if result is None:
@@ -30,7 +30,7 @@ class ItemReadModelRepository:
                     target_quantity=target_quantity,
                     title=title,
                     price=price,
-                    image_url=image_url,
+                    image_urls=image_urls or [],
                 )
             )
         else:
@@ -39,7 +39,7 @@ class ItemReadModelRepository:
             result.is_deleted = False
             result.title = title
             result.price = price
-            result.image_url = image_url
+            result.image_urls = image_urls or []
         await self._session.commit()
 
     async def mark_deleted(self, item_id: uuid.UUID) -> None:

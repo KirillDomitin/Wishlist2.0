@@ -3,7 +3,7 @@ import client from "./client";
 export interface ReservationItem {
   title: string;
   price: number | null;
-  image_url: string | null;
+  image_urls: string[];
   target_quantity: number;
 }
 

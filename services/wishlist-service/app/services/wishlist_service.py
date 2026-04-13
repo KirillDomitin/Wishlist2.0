@@ -120,7 +120,7 @@ class WishlistService:
             description=data.description,
             url=data.url,
             price=data.price,
-            image_url=data.image_url,
+            image_urls=data.image_urls,
             target_quantity=data.target_quantity,
         )
         await self._producer.publish(
@@ -131,7 +131,7 @@ class WishlistService:
                 "target_quantity": str(item.target_quantity),
                 "title": item.title,
                 "price": str(item.price) if item.price is not None else "",
-                "image_url": item.image_url or "",
+                "image_urls": ",".join(item.image_urls),
             },
         )
         return WishlistItemResponse.model_validate(item)

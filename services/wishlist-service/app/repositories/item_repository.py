@@ -24,7 +24,7 @@ class WishlistItemRepository:
         description: str | None,
         url: str | None,
         price: Decimal | None,
-        image_url: str | None,
+        image_urls: list[str],
         target_quantity: int,
     ) -> WishlistItem:
         item = WishlistItem(
@@ -33,7 +33,7 @@ class WishlistItemRepository:
             description=description,
             url=url,
             price=price,
-            image_url=image_url,
+            image_urls=image_urls,
             target_quantity=target_quantity,
         )
         self._session.add(item)
