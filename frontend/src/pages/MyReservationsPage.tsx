@@ -19,7 +19,7 @@ function reservationToItem(r: Reservation): WishlistItem | null {
     description: null,
     url: null,
     price: r.item.price,
-    image_url: r.item.image_url,
+    image_urls: r.item.image_urls ?? [],
     target_quantity: r.item.target_quantity,
     reserved_count: r.quantity,
     is_fully_reserved: false,
@@ -175,8 +175,8 @@ function ReservationCard({ reservation: r, index: i, onOpen, onCancel, onRebook,
       <div className={`w-14 h-14 rounded-xl overflow-hidden shrink-0 flex items-center justify-center ${
         isCancelled ? "bg-gray-100" : "bg-gradient-to-br from-purple-100 to-pink-100"
       }`}>
-        {r.item?.image_url ? (
-          <img src={r.item.image_url} alt={r.item.title} className="w-full h-full object-cover" />
+        {r.item?.image_urls?.[0] ? (
+          <img src={r.item.image_urls[0]} alt={r.item.title} className="w-full h-full object-cover" />
         ) : (
           <ShoppingBag className={`w-6 h-6 ${isCancelled ? "text-gray-300" : "text-purple-300"}`} />
         )}

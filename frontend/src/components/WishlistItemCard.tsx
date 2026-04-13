@@ -49,9 +49,9 @@ export function WishlistItemCard({
     >
       {/* Image or placeholder */}
       <div className="shrink-0 w-16 h-16 rounded-xl overflow-hidden bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
-        {item.image_url ? (
+        {item.image_urls?.length > 0 ? (
           <img
-            src={item.image_url}
+            src={item.image_urls[0]}
             alt={item.title}
             className="w-full h-full object-cover"
           />

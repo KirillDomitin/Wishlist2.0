@@ -11,13 +11,15 @@ async def handle_wishlist_item_event(event_type: str, data: dict[str, str]) -> N
 
         if event_type == "item.created":
             raw_price = data.get("price")
+            raw_image_urls = data.get("image_urls", "")
+            image_urls = [u for u in raw_image_urls.split(",") if u] if raw_image_urls else []
             await repo.upsert(
                 item_id=uuid.UUID(data["item_id"]),
                 wishlist_id=uuid.UUID(data["wishlist_id"]),
                 target_quantity=int(data.get("target_quantity", "1")),
                 title=data.get("title", ""),
                 price=Decimal(raw_price) if raw_price else None,
-                image_url=data.get("image_url") or None,
+                image_urls=image_urls,
             )
 
         elif event_type == "item.updated":

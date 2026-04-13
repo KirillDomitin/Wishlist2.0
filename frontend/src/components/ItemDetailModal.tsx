@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
   X,
   ExternalLink,
@@ -21,9 +22,11 @@ interface Props {
 export function ItemDetailModal({ item, onClose, onReserve, isLoggedIn = true }: Props) {
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [imgIndex, setImgIndex] = useState(0);
 
   if (!item) return null;
 
+  const images = item.image_urls ?? [];
   const available = item.target_quantity - item.reserved_count;
   const progressPct = item.target_quantity > 0
     ? Math.min((item.reserved_count / item.target_quantity) * 100, 100)
@@ -56,10 +59,10 @@ export function ItemDetailModal({ item, onClose, onReserve, isLoggedIn = true }:
           className="glass-card w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl overflow-hidden"
         >
           {/* Image area */}
-          <div className="relative h-52 bg-gradient-to-br from-purple-100 via-pink-50 to-amber-50 flex items-center justify-center">
-            {item.image_url ? (
+          <div className="relative h-52 bg-gradient-to-br from-purple-100 via-pink-50 to-amber-50 flex items-center justify-center overflow-hidden">
+            {images.length > 0 ? (
               <img
-                src={item.image_url}
+                src={images[imgIndex]}
                 alt={item.title}
                 className="w-full h-full object-cover"
               />
@@ -71,6 +74,34 @@ export function ItemDetailModal({ item, onClose, onReserve, isLoggedIn = true }:
                 <ShoppingBag className="w-20 h-20 text-purple-200" />
               </motion.div>
             )}
+
+            {/* Carousel controls */}
+            {images.length > 1 && (
+              <>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setImgIndex((i) => (i - 1 + images.length) % images.length); }}
+                  className="absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-white/80 flex items-center justify-center text-gray-600 hover:bg-white shadow-sm"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setImgIndex((i) => (i + 1) % images.length); }}
+                  className="absolute right-10 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-white/80 flex items-center justify-center text-gray-600 hover:bg-white shadow-sm"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
+                  {images.map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={(e) => { e.stopPropagation(); setImgIndex(i); }}
+                      className={`w-1.5 h-1.5 rounded-full transition-colors ${i === imgIndex ? "bg-white" : "bg-white/50"}`}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+
             <button
               onClick={onClose}
               className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-white/90 flex items-center justify-center text-gray-500 hover:text-gray-700 shadow-sm"

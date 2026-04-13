@@ -2,8 +2,8 @@ import enum
 import uuid
 from decimal import Decimal
 
-from sqlalchemy import Boolean, Enum, ForeignKey, Integer, Numeric, String
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Boolean, Enum, ForeignKey, Integer, Numeric, String, Text
+from sqlalchemy.dialects.postgresql import ARRAY, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, TimestampMixin
@@ -25,7 +25,7 @@ class ItemReadModel(Base):
     is_deleted: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     title: Mapped[str] = mapped_column(String(255), nullable=False, default="")
     price: Mapped[Decimal | None] = mapped_column(Numeric(10, 2), nullable=True)
-    image_url: Mapped[str | None] = mapped_column(String(2048), nullable=True)
+    image_urls: Mapped[list[str]] = mapped_column(ARRAY(Text), nullable=False, default=list)
 
     reservations: Mapped[list["Reservation"]] = relationship(
         "Reservation", back_populates="item"

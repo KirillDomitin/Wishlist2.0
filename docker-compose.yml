@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   nginx:
     build: ./nginx
@@ -9,6 +7,7 @@ services:
     volumes:
       - /etc/letsencrypt:/etc/letsencrypt:ro
       - /var/www/certbot:/var/www/certbot:ro
+      - uploads-data:/uploads:ro
     depends_on:
       - user-service
       - wishlist-service
@@ -55,6 +54,7 @@ services:
       - wishlist-net
     volumes:
       - ./services/wishlist-service:/app
+      - uploads-data:/uploads
     restart: unless-stopped
 
   reservation-service:
@@ -112,3 +112,4 @@ networks:
 volumes:
   postgres-data:
   redis-data:
+  uploads-data:
