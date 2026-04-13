@@ -1,3 +1,6 @@
+import json
+import random
+import string
 import uuid
 
 from passlib.context import CryptContext
@@ -8,9 +11,19 @@ from app.core.exceptions import ConflictError, NotFoundError, UnauthorizedError
 from app.core.jwt import create_access_token, create_refresh_token, decode_refresh_token
 from app.core.token_store import revoke_refresh_token, store_refresh_token, validate_and_rotate
 from app.repositories.user_repository import UserRepository
-from app.schemas.user import TokenResponse, UserLoginRequest, UserRegisterRequest, UserResponse
+from app.schemas.user import (
+    RegisterInitiateResponse,
+    TokenResponse,
+    UserLoginRequest,
+    UserRegisterRequest,
+    UserResponse,
+    VerifyEmailRequest,
+)
+from app.services.email_service import send_verification_email
 
 _pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+_PENDING_REG_TTL = 900  # 15 minutes
 
 
 class UserService:
@@ -18,11 +31,40 @@ class UserService:
         self._repo = UserRepository(session)
         self._redis = redis
 
-    async def register(self, data: UserRegisterRequest) -> TokenResponse:
+    async def initiate_register(self, data: UserRegisterRequest) -> RegisterInitiateResponse:
         if await self._repo.get_by_email(data.email):
             raise ConflictError("Email already registered")
+
+        code = "".join(random.choices(string.digits, k=6))
         password_hash = _pwd_context.hash(data.password)
-        user = await self._repo.create(data.email, password_hash, data.name)
+
+        pending = json.dumps({
+            "email": data.email,
+            "password_hash": password_hash,
+            "name": data.name,
+            "code": code,
+        })
+        await self._redis.setex(f"pending_reg:{data.email}", _PENDING_REG_TTL, pending)
+
+        await send_verification_email(data.email, code)
+
+        return RegisterInitiateResponse(message="Код подтверждения отправлен на email")
+
+    async def verify_email(self, data: VerifyEmailRequest) -> TokenResponse:
+        raw = await self._redis.get(f"pending_reg:{data.email}")
+        if not raw:
+            raise NotFoundError("Код истёк или не найден. Зарегистрируйтесь заново.")
+
+        pending = json.loads(raw)
+        if pending["code"] != data.code:
+            raise UnauthorizedError("Неверный код подтверждения")
+
+        if await self._repo.get_by_email(data.email):
+            raise ConflictError("Email already registered")
+
+        user = await self._repo.create(pending["email"], pending["password_hash"], pending["name"])
+        await self._redis.delete(f"pending_reg:{data.email}")
+
         user_id = str(user.id)
         refresh_token, jti = create_refresh_token(user_id)
         await store_refresh_token(self._redis, jti, user_id)
