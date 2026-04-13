@@ -24,7 +24,6 @@ export function AddItemModal({ open, onClose, editItem, onSubmit }: Props) {
   const [description, setDescription] = useState("");
   const [url, setUrl] = useState("");
   const [price, setPrice] = useState("");
-  const [targetQty, setTargetQty] = useState("1");
   const [loading, setLoading] = useState(false);
 
   const [images, setImages] = useState<PendingImage[]>([]);
@@ -41,7 +40,6 @@ export function AddItemModal({ open, onClose, editItem, onSubmit }: Props) {
       setDescription(editItem.description ?? "");
       setUrl(editItem.url ?? "");
       setPrice(editItem.price != null ? String(editItem.price) : "");
-      setTargetQty(String(editItem.target_quantity));
       setImages(
         (editItem.image_urls ?? []).map((u) => ({
           preview: u,
@@ -52,7 +50,7 @@ export function AddItemModal({ open, onClose, editItem, onSubmit }: Props) {
       );
     } else {
       setTitle(""); setDescription(""); setUrl("");
-      setPrice(""); setTargetQty("1"); setImages([]);
+      setPrice(""); setImages([]);
     }
     setImageMode("url");
     setUrlInput("");
@@ -129,7 +127,7 @@ export function AddItemModal({ open, onClose, editItem, onSubmit }: Props) {
       url: url.trim() || undefined,
       price: price ? Number(price) : undefined,
       image_urls: resolvedUrls.filter((u): u is string => !!u),
-      target_quantity: Number(targetQty) || 1,
+      target_quantity: 1,
     });
     setLoading(false);
     onClose();
@@ -161,15 +159,9 @@ export function AddItemModal({ open, onClose, editItem, onSubmit }: Props) {
           <textarea className="input-field resize-none h-16" placeholder="Цвет: чёрный, версия 2024..." value={description} onChange={(e) => setDescription(e.target.value)} />
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Цена (₽)</label>
-            <input className="input-field" type="number" min="0" placeholder="25000" value={price} onChange={(e) => setPrice(e.target.value)} />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Кол-во нужных</label>
-            <input className="input-field" type="number" min="1" value={targetQty} onChange={(e) => setTargetQty(e.target.value)} />
-          </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Цена (₽)</label>
+          <input className="input-field" type="number" min="0" placeholder="25000" value={price} onChange={(e) => setPrice(e.target.value)} />
         </div>
 
         <div>
