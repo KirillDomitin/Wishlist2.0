@@ -84,7 +84,7 @@ export function WishlistItemCard({
             {isOwner && onEdit && (
               <button
                 onClick={() => onEdit(item)}
-                className="p-1.5 rounded-lg text-gray-400 hover:text-purple-600 hover:bg-purple-50 transition-colors opacity-0 group-hover:opacity-100"
+                className="p-1.5 rounded-lg text-gray-400 hover:text-purple-600 hover:bg-purple-50 transition-colors"
               >
                 <Pencil className="w-4 h-4" />
               </button>
@@ -92,7 +92,7 @@ export function WishlistItemCard({
             {isOwner && onDelete && (
               <button
                 onClick={() => onDelete(item.id)}
-                className="p-1.5 rounded-lg text-gray-400 hover:text-rose-500 hover:bg-rose-50 transition-colors opacity-0 group-hover:opacity-100"
+                className="p-1.5 rounded-lg text-gray-400 hover:text-rose-500 hover:bg-rose-50 transition-colors"
               >
                 <Trash2 className="w-4 h-4" />
               </button>
