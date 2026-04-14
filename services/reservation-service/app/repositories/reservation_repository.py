@@ -20,6 +20,8 @@ class ItemReadModelRepository:
         title: str = "",
         price: Decimal | None = None,
         image_urls: list[str] | None = None,
+        owner_id: uuid.UUID | None = None,
+        surprise_mode: bool = False,
     ) -> None:
         result = await self._session.get(ItemReadModel, item_id)
         if result is None:
@@ -27,6 +29,8 @@ class ItemReadModelRepository:
                 ItemReadModel(
                     id=item_id,
                     wishlist_id=wishlist_id,
+                    owner_id=owner_id,
+                    surprise_mode=surprise_mode,
                     target_quantity=target_quantity,
                     title=title,
                     price=price,
@@ -35,6 +39,8 @@ class ItemReadModelRepository:
             )
         else:
             result.wishlist_id = wishlist_id
+            result.owner_id = owner_id
+            result.surprise_mode = surprise_mode
             result.target_quantity = target_quantity
             result.is_deleted = False
             result.title = title

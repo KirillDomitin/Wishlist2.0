@@ -27,6 +27,9 @@ class ReservationService:
         if item is None or item.is_deleted:
             raise NotFoundError("Item not found")
 
+        if item.owner_id is not None and item.owner_id == reserver_id:
+            raise ForbiddenError("Cannot reserve your own item")
+
         active_count = await self._item_repo.get_active_reserved_count(data.item_id)
         if active_count + data.quantity > item.target_quantity:
             raise ConflictError(
@@ -40,6 +43,10 @@ class ReservationService:
             {
                 "item_id": str(data.item_id),
                 "wishlist_id": str(item.wishlist_id),
+                "owner_id": str(item.owner_id) if item.owner_id else "",
+                "reserver_id": str(reserver_id),
+                "item_title": item.title,
+                "surprise_mode": str(item.surprise_mode),
                 "quantity": str(data.quantity),
             },
         )
@@ -65,6 +72,10 @@ class ReservationService:
             {
                 "item_id": str(reservation.item_id),
                 "wishlist_id": str(item.wishlist_id) if item else "",
+                "owner_id": str(item.owner_id) if item and item.owner_id else "",
+                "reserver_id": str(reserver_id),
+                "item_title": item.title if item else "",
+                "surprise_mode": str(item.surprise_mode) if item else "False",
                 "quantity": str(reservation.quantity),
             },
         )
