@@ -4,6 +4,9 @@ import { useAppDispatch, useAppSelector } from "./store/hooks";
 import { fetchMe } from "./store/authSlice";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
+import ProfilePage from "./pages/ProfilePage";
 import DashboardPage from "./pages/DashboardPage";
 import WishlistDetailPage from "./pages/WishlistDetailPage";
 import SharedWishlistPage from "./pages/SharedWishlistPage";
@@ -26,6 +29,8 @@ function AppRoutes() {
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route path="/shared/:token" element={<SharedWishlistPage />} />
       <Route
         path="/"
@@ -48,6 +53,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <MyReservationsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <ProfilePage />
           </ProtectedRoute>
         }
       />

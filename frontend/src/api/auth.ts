@@ -49,4 +49,12 @@ export const authApi = {
   logout: async (refresh_token: string): Promise<void> => {
     await client.post("/users/logout", { refresh_token });
   },
+
+  forgotPassword: async (email: string): Promise<void> => {
+    await client.post("/users/forgot-password", { email });
+  },
+
+  resetPassword: async (token: string, new_password: string): Promise<void> => {
+    await client.post("/users/reset-password", { token, new_password });
+  },
 };

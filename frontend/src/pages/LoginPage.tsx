@@ -101,15 +101,22 @@ export default function LoginPage() {
           </motion.button>
         </form>
 
-        <p className="text-center text-sm text-gray-500 mt-6">
-          Нет аккаунта?{" "}
-          <Link
-            to={redirectRef.current !== "/" ? `/register?redirect=${encodeURIComponent(redirectRef.current)}` : "/register"}
-            className="text-purple-600 font-semibold hover:text-purple-700"
-          >
-            Зарегистрироваться
-          </Link>
-        </p>
+        <div className="mt-6 space-y-2 text-center">
+          <p className="text-sm text-gray-500">
+            <Link to="/forgot-password" className="text-purple-600 font-semibold hover:text-purple-700">
+              Забыли пароль?
+            </Link>
+          </p>
+          <p className="text-sm text-gray-500">
+            Нет аккаунта?{" "}
+            <Link
+              to={redirectRef.current !== "/" ? `/register?redirect=${encodeURIComponent(redirectRef.current)}` : "/register"}
+              className="text-purple-600 font-semibold hover:text-purple-700"
+            >
+              Зарегистрироваться
+            </Link>
+          </p>
+        </div>
       </motion.div>
     </div>
   );

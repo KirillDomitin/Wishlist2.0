@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Loader2, Sparkles } from "lucide-react";
 import { Modal } from "./ui/Modal";
 import type { WishlistItem, WishlistItemCreate } from "../api/wishlists";
 import { wishlistApi } from "../api/wishlists";
@@ -29,6 +30,8 @@ export function AddItemModal({ open, onClose, editItem, onSubmit }: Props) {
   const [images, setImages] = useState<PendingImage[]>([]);
   const [imageMode, setImageMode] = useState<ImageMode>("url");
   const [urlInput, setUrlInput] = useState("");
+  const [scraping, setScraping] = useState(false);
+  const [scrapeError, setScrapeError] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imagesRef = useRef<PendingImage[]>(images);
@@ -54,6 +57,7 @@ export function AddItemModal({ open, onClose, editItem, onSubmit }: Props) {
     }
     setImageMode("url");
     setUrlInput("");
+    setScrapeError(null);
   }, [editItem, open]);
 
   const addUploadedFile = async (file: File) => {
@@ -105,6 +109,29 @@ export function AddItemModal({ open, onClose, editItem, onSubmit }: Props) {
       const file = item.getAsFile();
       if (file) addUploadedFile(file);
     });
+  };
+
+  const handleScrape = async () => {
+    const trimmed = url.trim();
+    if (!trimmed) return;
+    setScraping(true);
+    setScrapeError(null);
+    try {
+      const data = await wishlistApi.scrapeUrl(trimmed);
+      if (data.title && !title) setTitle(data.title);
+      if (data.price != null && !price) setPrice(String(data.price));
+      if (data.image_url) {
+        setImages((prev) => {
+          const alreadyHas = prev.some((img) => img.url === data.image_url);
+          if (alreadyHas) return prev;
+          return [...prev, { preview: data.image_url!, url: data.image_url!, uploading: false, promise: null }];
+        });
+      }
+    } catch {
+      setScrapeError("Не удалось получить данные со страницы");
+    } finally {
+      setScraping(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -166,7 +193,31 @@ export function AddItemModal({ open, onClose, editItem, onSubmit }: Props) {
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Ссылка на товар</label>
-          <input className="input-field" type="url" placeholder="https://..." value={url} onChange={(e) => setUrl(e.target.value)} />
+          <div className="flex gap-2">
+            <input
+              className="input-field"
+              type="url"
+              placeholder="https://..."
+              value={url}
+              onChange={(e) => { setUrl(e.target.value); setScrapeError(null); }}
+            />
+            <button
+              type="button"
+              onClick={handleScrape}
+              disabled={!url.trim() || scraping}
+              title="Заполнить по ссылке"
+              className="btn-secondary shrink-0 px-3 gap-1.5"
+            >
+              {scraping ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Sparkles className="w-4 h-4" />
+              )}
+            </button>
+          </div>
+          {scrapeError && (
+            <p className="text-xs text-rose-500 mt-1">{scrapeError}</p>
+          )}
         </div>
 
         {/* Image section */}
