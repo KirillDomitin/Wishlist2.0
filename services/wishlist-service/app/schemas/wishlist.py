@@ -86,9 +86,3 @@ class WishlistDetailResponse(BaseModel):
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
-
-
-class ScrapedItemData(BaseModel):
-    title: str | None = None
-    price: Decimal | None = None
-    image_url: str | None = None

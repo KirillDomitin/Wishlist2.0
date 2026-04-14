@@ -1,13 +1,12 @@
 import uuid
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.dependencies import get_current_user_id
 from app.core.redis_client import get_redis
 from app.schemas.wishlist import (
-    ScrapedItemData,
     WishlistCreate,
     WishlistDetailResponse,
     WishlistItemCreate,
@@ -30,17 +29,6 @@ def _svc(db: AsyncSession = Depends(get_db)) -> WishlistService:
 @router.get("/shared/{token}", response_model=WishlistDetailResponse)
 async def get_shared(token: str, svc: WishlistService = Depends(_svc)) -> WishlistDetailResponse:
     return await svc.get_by_share_token(token)
-
-
-# ── URL scraper ───────────────────────────────────────────────────────────────
-
-@router.get("/scrape-url", response_model=ScrapedItemData)
-async def scrape_url(
-    url: str = Query(..., description="Product URL to scrape"),
-    _user_id: str = Depends(get_current_user_id),
-    svc: WishlistService = Depends(_svc),
-) -> ScrapedItemData:
-    return await svc.scrape_url(url)
 
 
 # ── My wishlists ──────────────────────────────────────────────────────────────
