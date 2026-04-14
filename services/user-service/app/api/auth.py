@@ -4,19 +4,37 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.redis_client import get_redis
-from app.schemas.user import LogoutRequest, RefreshRequest, TokenResponse, UserLoginRequest, UserRegisterRequest, UserResponse
+from app.schemas.user import (
+    LogoutRequest,
+    RefreshRequest,
+    RegisterInitiateResponse,
+    TokenResponse,
+    UserLoginRequest,
+    UserRegisterRequest,
+    UserResponse,
+    VerifyEmailRequest,
+)
 from app.services.user_service import UserService
 
 router = APIRouter(prefix="/api/users")
 
 
-@router.post("/register", response_model=TokenResponse, status_code=201)
+@router.post("/register", response_model=RegisterInitiateResponse, status_code=200)
 async def register(
     data: UserRegisterRequest,
     db: AsyncSession = Depends(get_db),
     redis: Redis = Depends(get_redis),
+) -> RegisterInitiateResponse:
+    return await UserService(db, redis).initiate_register(data)
+
+
+@router.post("/verify-email", response_model=TokenResponse, status_code=201)
+async def verify_email(
+    data: VerifyEmailRequest,
+    db: AsyncSession = Depends(get_db),
+    redis: Redis = Depends(get_redis),
 ) -> TokenResponse:
-    return await UserService(db, redis).register(data)
+    return await UserService(db, redis).verify_email(data)
 
 
 @router.post("/login", response_model=TokenResponse)

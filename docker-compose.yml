@@ -15,6 +15,7 @@ services:
       - frontend
     networks:
       - wishlist-net
+    restart: unless-stopped
 
   frontend:
     build: ./frontend
@@ -29,6 +30,12 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       JWT_ALGORITHM: HS256
       JWT_EXPIRE_MINUTES: 60
+      SMTP_HOST: ${SMTP_HOST:-smtp.yandex.ru}
+      SMTP_PORT: ${SMTP_PORT:-465}
+      SMTP_USE_SSL: ${SMTP_USE_SSL:-true}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-}
     depends_on:
       postgres:
         condition: service_healthy

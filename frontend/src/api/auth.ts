@@ -11,6 +11,15 @@ interface RegisterRequest {
   name: string;
 }
 
+interface VerifyEmailRequest {
+  email: string;
+  code: string;
+}
+
+export interface RegisterInitiateResponse {
+  message: string;
+}
+
 export interface TokenResponse {
   access_token: string;
   refresh_token: string;
@@ -22,8 +31,13 @@ export const authApi = {
     return res.data;
   },
 
-  register: async (data: RegisterRequest): Promise<TokenResponse> => {
-    const res = await client.post<TokenResponse>("/users/register", data);
+  register: async (data: RegisterRequest): Promise<RegisterInitiateResponse> => {
+    const res = await client.post<RegisterInitiateResponse>("/users/register", data);
+    return res.data;
+  },
+
+  verifyEmail: async (data: VerifyEmailRequest): Promise<TokenResponse> => {
+    const res = await client.post<TokenResponse>("/users/verify-email", data);
     return res.data;
   },
 
