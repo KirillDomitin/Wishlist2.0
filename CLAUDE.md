@@ -112,6 +112,21 @@ Dev Environment
 Must run via docker-compose
 Hot reload enabled
 
+Production Deploy
+Server: root@83.217.211.189, project at /opt/wishlist
+Uses docker-compose (v1 CLI, not docker compose)
+
+Deploy sequence:
+  git fetch origin && git reset --hard origin/master
+  docker-compose build <changed-services>
+  docker-compose up -d
+
+NEVER use git pull on the server — divergent branches cause silent no-op.
+Always use git fetch + git reset --hard origin/master.
+
+After nginx config changes always rebuild with --no-cache:
+  docker-compose build --no-cache nginx
+
 Summary
 Think in layers
 Think async
