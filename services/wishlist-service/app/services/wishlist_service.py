@@ -128,6 +128,8 @@ class WishlistService:
             {
                 "item_id": str(item.id),
                 "wishlist_id": str(wishlist_id),
+                "owner_id": str(owner_id),
+                "surprise_mode": str(wishlist.surprise_mode),
                 "target_quantity": str(item.target_quantity),
                 "title": item.title,
                 "price": str(item.price) if item.price is not None else "",
