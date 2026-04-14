@@ -5,9 +5,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.core.redis_client import get_redis
 from app.schemas.user import (
+    ForgotPasswordRequest,
     LogoutRequest,
     RefreshRequest,
     RegisterInitiateResponse,
+    ResetPasswordRequest,
     TokenResponse,
     UserLoginRequest,
     UserRegisterRequest,
@@ -62,3 +64,21 @@ async def logout(
     redis: Redis = Depends(get_redis),
 ) -> None:
     await UserService(db, redis).logout(data.refresh_token)
+
+
+@router.post("/forgot-password", status_code=204)
+async def forgot_password(
+    data: ForgotPasswordRequest,
+    db: AsyncSession = Depends(get_db),
+    redis: Redis = Depends(get_redis),
+) -> None:
+    await UserService(db, redis).forgot_password(data)
+
+
+@router.post("/reset-password", status_code=204)
+async def reset_password(
+    data: ResetPasswordRequest,
+    db: AsyncSession = Depends(get_db),
+    redis: Redis = Depends(get_redis),
+) -> None:
+    await UserService(db, redis).reset_password(data)

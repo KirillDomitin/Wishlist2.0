@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     SMTP_USER: str = ""
     SMTP_PASSWORD: str = ""
     SMTP_FROM: str = ""
+    FRONTEND_URL: str = "http://localhost"
 
     model_config = SettingsConfigDict(env_file=".env")
 

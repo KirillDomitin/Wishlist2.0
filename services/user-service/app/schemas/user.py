@@ -43,3 +43,18 @@ class RefreshRequest(BaseModel):
 
 class LogoutRequest(BaseModel):
     refresh_token: str
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str = Field(min_length=8)
+
+
+class UserUpdateRequest(BaseModel):
+    name: str | None = Field(None, min_length=1, max_length=100)
+    current_password: str | None = None
+    new_password: str | None = Field(None, min_length=8)

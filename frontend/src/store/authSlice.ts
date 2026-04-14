@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { authApi } from "../api/auth";
-import { usersApi } from "../api/users";
+import { usersApi, type UserUpdateRequest } from "../api/users";
 
 interface AuthState {
   token: string | null;
@@ -25,6 +25,18 @@ export const fetchMe = createAsyncThunk("auth/fetchMe", async () => {
   const user = await usersApi.getMe();
   return user.name;
 });
+
+export const updateProfile = createAsyncThunk(
+  "auth/updateProfile",
+  async (data: UserUpdateRequest, { rejectWithValue }) => {
+    try {
+      const user = await usersApi.updateMe(data);
+      return user.name;
+    } catch (e: unknown) {
+      return rejectWithValue(extractErrorMessage(e, "Ошибка сохранения"));
+    }
+  }
+);
 
 type ApiError = { response?: { data?: { detail?: string | Array<{ msg: string }> } } };
 
@@ -131,6 +143,18 @@ const authSlice = createSlice({
         state.token = action.payload;
       })
       .addCase(verifyEmail.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(updateProfile.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateProfile.fulfilled, (state, action) => {
+        state.loading = false;
+        state.name = action.payload;
+      })
+      .addCase(updateProfile.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       });

@@ -113,4 +113,11 @@ export const wishlistApi = {
     const res = await client.post<{ url: string }>("/wishlists/upload-image", form);
     return res.data.url;
   },
+
+  scrapeUrl: async (url: string): Promise<{ title?: string; price?: number; image_url?: string }> => {
+    const res = await client.get<{ title?: string; price?: number; image_url?: string }>(
+      `/wishlists/scrape-url?url=${encodeURIComponent(url)}`
+    );
+    return res.data;
+  },
 };

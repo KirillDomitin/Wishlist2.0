@@ -8,6 +8,7 @@ from app.core.streams import StreamProducer
 from app.repositories.item_repository import WishlistItemRepository
 from app.repositories.wishlist_repository import WishlistRepository
 from app.schemas.wishlist import (
+    ScrapedItemData,
     WishlistCreate,
     WishlistDetailResponse,
     WishlistItemCreate,
@@ -16,6 +17,7 @@ from app.schemas.wishlist import (
     WishlistSummaryResponse,
     WishlistUpdate,
 )
+from app.services.meta_scraper import fetch_url_meta
 
 _STREAM_WISHLIST_ITEMS = "stream:wishlist_items"
 
@@ -173,3 +175,11 @@ class WishlistService:
 
         await self._item_repo.delete(item)
         await self._producer.publish("item.deleted", {"item_id": str(item_id)})
+
+    async def scrape_url(self, url: str) -> ScrapedItemData:
+        data = await fetch_url_meta(url)
+        return ScrapedItemData(
+            title=data.get("title"),
+            price=data.get("price"),
+            image_url=data.get("image_url"),
+        )

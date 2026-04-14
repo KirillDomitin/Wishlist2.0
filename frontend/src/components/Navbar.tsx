@@ -38,10 +38,10 @@ export function Navbar() {
             <span className="hidden sm:inline">Бронирования</span>
           </Link>
           {name && (
-            <span className="hidden sm:flex items-center gap-1.5 text-sm text-gray-600 font-medium px-3">
+            <Link to="/profile" className="hidden sm:flex items-center gap-1.5 text-sm text-gray-600 font-medium px-3 rounded-xl hover:bg-white/60 hover:text-purple-700 transition-all duration-200">
               <User className="w-4 h-4 text-purple-400" />
               {name}
-            </span>
+            </Link>
           )}
           <button onClick={handleLogout} className="btn-ghost text-rose-500 hover:text-rose-600 hover:bg-rose-50">
             <LogOut className="w-4 h-4" />

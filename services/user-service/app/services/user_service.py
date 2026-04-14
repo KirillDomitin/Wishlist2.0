@@ -1,5 +1,6 @@
 import json
 import random
+import secrets
 import string
 import uuid
 
@@ -12,14 +13,17 @@ from app.core.jwt import create_access_token, create_refresh_token, decode_refre
 from app.core.token_store import revoke_refresh_token, store_refresh_token, validate_and_rotate
 from app.repositories.user_repository import UserRepository
 from app.schemas.user import (
+    ForgotPasswordRequest,
     RegisterInitiateResponse,
+    ResetPasswordRequest,
     TokenResponse,
     UserLoginRequest,
     UserRegisterRequest,
     UserResponse,
+    UserUpdateRequest,
     VerifyEmailRequest,
 )
-from app.services.email_service import send_verification_email
+from app.services.email_service import send_password_reset_email, send_verification_email
 
 _pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -106,3 +110,34 @@ class UserService:
         if not user:
             raise NotFoundError("User not found")
         return UserResponse.model_validate(user)
+
+    async def forgot_password(self, data: ForgotPasswordRequest) -> None:
+        user = await self._repo.get_by_email(data.email)
+        if not user:
+            return  # silent — don't reveal whether email is registered
+        token = secrets.token_urlsafe(32)
+        await self._redis.setex(f"reset_pwd:{token}", _PENDING_REG_TTL, str(user.id))
+        await send_password_reset_email(data.email, token)
+
+    async def reset_password(self, data: ResetPasswordRequest) -> None:
+        raw = await self._redis.get(f"reset_pwd:{data.token}")
+        if not raw:
+            raise NotFoundError("Ссылка недействительна или истекла")
+        user_id = uuid.UUID(raw.decode() if isinstance(raw, bytes) else raw)
+        password_hash = _pwd_context.hash(data.new_password)
+        await self._repo.update(user_id, password_hash=password_hash)
+        await self._redis.delete(f"reset_pwd:{data.token}")
+
+    async def update_me(self, user_id: uuid.UUID, data: UserUpdateRequest) -> UserResponse:
+        user = await self._repo.get_by_id(user_id)
+        if not user:
+            raise NotFoundError("User not found")
+        password_hash: str | None = None
+        if data.new_password:
+            if not data.current_password:
+                raise UnauthorizedError("Требуется текущий пароль")
+            if not _pwd_context.verify(data.current_password, user.password_hash):
+                raise UnauthorizedError("Неверный текущий пароль")
+            password_hash = _pwd_context.hash(data.new_password)
+        updated = await self._repo.update(user_id, name=data.name, password_hash=password_hash)
+        return UserResponse.model_validate(updated)
