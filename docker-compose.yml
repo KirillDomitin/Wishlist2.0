@@ -15,6 +15,7 @@ services:
       - frontend
     networks:
       - wishlist-net
+    restart: unless-stopped
 
   frontend:
     build: ./frontend
