@@ -23,6 +23,7 @@ function reservationToItem(r: Reservation): WishlistItem | null {
     target_quantity: r.item.target_quantity,
     reserved_count: r.quantity,
     is_fully_reserved: false,
+    priority: 0,
   };
 }
 
