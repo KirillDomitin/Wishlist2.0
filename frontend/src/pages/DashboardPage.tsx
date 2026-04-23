@@ -24,6 +24,7 @@ export default function DashboardPage() {
   const handleCreate = async (data: {
     title: string;
     surprise_mode: boolean;
+    event_date: string | null;
   }) => {
     await dispatch(createWishlist(data));
     toast("Список создан! 🎉");

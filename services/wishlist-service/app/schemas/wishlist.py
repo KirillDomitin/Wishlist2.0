@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -14,6 +14,7 @@ class WishlistItemCreate(BaseModel):
     price: Decimal | None = Field(default=None, ge=0)
     image_urls: list[str] = Field(default_factory=list)
     target_quantity: int = Field(default=1, ge=1)
+    priority: int = Field(default=0, ge=0, le=2)
 
 
 class WishlistItemUpdate(BaseModel):
@@ -23,6 +24,7 @@ class WishlistItemUpdate(BaseModel):
     price: Decimal | None = Field(default=None, ge=0)
     image_urls: list[str] | None = None
     target_quantity: int | None = Field(default=None, ge=1)
+    priority: int | None = Field(default=None, ge=0, le=2)
 
 
 class WishlistItemResponse(BaseModel):
@@ -36,6 +38,7 @@ class WishlistItemResponse(BaseModel):
     target_quantity: int
     reserved_count: int
     is_fully_reserved: bool
+    priority: int
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
@@ -54,12 +57,14 @@ class WishlistCreate(BaseModel):
     title: str = Field(min_length=1, max_length=255)
     is_public: bool = True
     surprise_mode: bool = False
+    event_date: date | None = None
 
 
 class WishlistUpdate(BaseModel):
     title: str | None = Field(default=None, min_length=1, max_length=255)
     is_public: bool | None = None
     surprise_mode: bool | None = None
+    event_date: date | None = None
 
 
 class WishlistSummaryResponse(BaseModel):
@@ -69,6 +74,7 @@ class WishlistSummaryResponse(BaseModel):
     is_public: bool
     share_token: str
     surprise_mode: bool
+    event_date: date | None
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
@@ -82,6 +88,7 @@ class WishlistDetailResponse(BaseModel):
     is_public: bool
     share_token: str
     surprise_mode: bool
+    event_date: date | None
     items: list[WishlistItemResponse]
     created_at: datetime
 

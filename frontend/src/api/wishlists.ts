@@ -10,6 +10,7 @@ export interface WishlistItem {
   target_quantity: number;
   reserved_count: number;
   is_fully_reserved: boolean;
+  priority: number;
 }
 
 export interface WishlistSummary {
@@ -17,6 +18,7 @@ export interface WishlistSummary {
   title: string;
   share_token: string;
   surprise_mode: boolean;
+  event_date: string | null;
   item_count: number;
 }
 
@@ -25,17 +27,20 @@ export interface WishlistDetail {
   title: string;
   share_token: string;
   surprise_mode: boolean;
+  event_date: string | null;
   items: WishlistItem[];
 }
 
 export interface WishlistCreate {
   title: string;
   surprise_mode?: boolean;
+  event_date?: string | null;
 }
 
 export interface WishlistUpdate {
   title?: string;
   surprise_mode?: boolean;
+  event_date?: string | null;
 }
 
 export interface WishlistItemCreate {
@@ -45,6 +50,7 @@ export interface WishlistItemCreate {
   price?: number;
   image_urls?: string[];
   target_quantity?: number;
+  priority?: number;
 }
 
 export interface WishlistItemUpdate {
@@ -54,6 +60,7 @@ export interface WishlistItemUpdate {
   price?: number;
   image_urls?: string[];
   target_quantity?: number;
+  priority?: number;
 }
 
 export const wishlistApi = {

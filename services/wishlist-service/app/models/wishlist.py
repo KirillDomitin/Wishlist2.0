@@ -1,8 +1,9 @@
 import secrets
 import uuid
+from datetime import date
 from decimal import Decimal
 
-from sqlalchemy import Boolean, ForeignKey, Integer, Numeric, String, Text
+from sqlalchemy import Boolean, Date, ForeignKey, Integer, Numeric, String, Text
 from sqlalchemy.dialects.postgresql import ARRAY, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -27,6 +28,7 @@ class Wishlist(Base, TimestampMixin):
         default=lambda: secrets.token_urlsafe(16),
     )
     surprise_mode: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    event_date: Mapped[date | None] = mapped_column(Date, nullable=True)
 
     items: Mapped[list["WishlistItem"]] = relationship(
         "WishlistItem", back_populates="wishlist", cascade="all, delete-orphan"
@@ -52,6 +54,7 @@ class WishlistItem(Base, TimestampMixin):
     image_urls: Mapped[list[str]] = mapped_column(ARRAY(Text), nullable=False, default=list)
     target_quantity: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
     reserved_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    priority: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
     wishlist: Mapped["Wishlist"] = relationship("Wishlist", back_populates="items")
 

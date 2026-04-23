@@ -26,6 +26,7 @@ class WishlistItemRepository:
         price: Decimal | None,
         image_urls: list[str],
         target_quantity: int,
+        priority: int = 0,
     ) -> WishlistItem:
         item = WishlistItem(
             wishlist_id=wishlist_id,
@@ -35,6 +36,7 @@ class WishlistItemRepository:
             price=price,
             image_urls=image_urls,
             target_quantity=target_quantity,
+            priority=priority,
         )
         self._session.add(item)
         await self._session.commit()

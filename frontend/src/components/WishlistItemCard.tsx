@@ -1,7 +1,9 @@
 import { motion } from "framer-motion";
 import {
   ExternalLink,
+  Flame,
   Pencil,
+  Star,
   Trash2,
   Users,
   CheckCircle,
@@ -20,6 +22,26 @@ interface Props {
   onOpen?: (item: WishlistItem) => void;
   index: number;
   reservers?: ReserverInfo[];
+}
+
+function PriorityBadge({ priority }: { priority: number }) {
+  if (priority === 2) {
+    return (
+      <span className="flex items-center gap-1 text-[11px] font-semibold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full">
+        <Flame className="w-3 h-3" />
+        Очень хочу
+      </span>
+    );
+  }
+  if (priority === 1) {
+    return (
+      <span className="flex items-center gap-1 text-[11px] font-semibold text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full">
+        <Star className="w-3 h-3" />
+        Хочу
+      </span>
+    );
+  }
+  return null;
 }
 
 export function WishlistItemCard({
@@ -50,11 +72,7 @@ export function WishlistItemCard({
       {/* Image or placeholder */}
       <div className="shrink-0 w-16 h-16 rounded-xl overflow-hidden bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
         {item.image_urls?.length > 0 ? (
-          <img
-            src={item.image_urls[0]}
-            alt={item.title}
-            className="w-full h-full object-cover"
-          />
+          <img src={item.image_urls[0]} alt={item.title} className="w-full h-full object-cover" />
         ) : (
           <ShoppingBag className="w-7 h-7 text-purple-300" />
         )}
@@ -76,6 +94,7 @@ export function WishlistItemCard({
                 href={item.url}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
                 className="p-1.5 rounded-lg text-gray-400 hover:text-purple-600 hover:bg-purple-50 transition-colors"
               >
                 <ExternalLink className="w-4 h-4" />
@@ -83,7 +102,7 @@ export function WishlistItemCard({
             )}
             {isOwner && onEdit && (
               <button
-                onClick={() => onEdit(item)}
+                onClick={(e) => { e.stopPropagation(); onEdit(item); }}
                 className="p-1.5 rounded-lg text-gray-400 hover:text-purple-600 hover:bg-purple-50 transition-colors"
               >
                 <Pencil className="w-4 h-4" />
@@ -91,7 +110,7 @@ export function WishlistItemCard({
             )}
             {isOwner && onDelete && (
               <button
-                onClick={() => onDelete(item.id)}
+                onClick={(e) => { e.stopPropagation(); onDelete(item.id); }}
                 className="p-1.5 rounded-lg text-gray-400 hover:text-rose-500 hover:bg-rose-50 transition-colors"
               >
                 <Trash2 className="w-4 h-4" />
@@ -106,6 +125,8 @@ export function WishlistItemCard({
               {Number(item.price).toLocaleString("ru-RU")} ₽
             </span>
           )}
+
+          <PriorityBadge priority={item.priority} />
 
           {item.target_quantity > 1 && (
             <span className="flex items-center gap-1 text-xs text-gray-500">
@@ -124,7 +145,7 @@ export function WishlistItemCard({
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => onReserve(item)}
+                onClick={(e) => { e.stopPropagation(); onReserve(item); }}
                 className="text-xs font-semibold px-3 py-1 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-sm shadow-purple-200 hover:shadow-purple-300 transition-shadow"
               >
                 Забронировать

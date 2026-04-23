@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
-import { EyeOff, Gift, Share2, Trash2 } from "lucide-react";
+import { CalendarDays, EyeOff, Gift, Share2, Trash2 } from "lucide-react";
 import type { WishlistSummary } from "../api/wishlists";
 
 interface Props {
@@ -8,6 +8,40 @@ interface Props {
   onDelete: (id: string) => void;
   onShare: (token: string) => void;
   index: number;
+}
+
+function daysUntil(dateStr: string): number {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const target = new Date(dateStr);
+  target.setHours(0, 0, 0, 0);
+  return Math.round((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+}
+
+function EventDateBadge({ eventDate }: { eventDate: string }) {
+  const diff = daysUntil(eventDate);
+  if (diff < 0) return null;
+
+  let text: string;
+  let cls: string;
+
+  if (diff === 0) {
+    text = "сегодня!";
+    cls = "text-rose-600 bg-rose-50";
+  } else if (diff <= 7) {
+    text = `через ${diff} ${diff === 1 ? "день" : diff < 5 ? "дня" : "дней"}`;
+    cls = "text-amber-600 bg-amber-50";
+  } else {
+    text = `через ${diff} дней`;
+    cls = "text-teal-600 bg-teal-50";
+  }
+
+  return (
+    <span className={`flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${cls}`}>
+      <CalendarDays className="w-3.5 h-3.5" />
+      {text}
+    </span>
+  );
 }
 
 export function WishlistCard({ wishlist, onDelete, onShare, index }: Props) {
@@ -57,7 +91,7 @@ export function WishlistCard({ wishlist, onDelete, onShare, index }: Props) {
           </div>
         </div>
 
-        <div className="flex items-center gap-3 text-xs text-gray-500">
+        <div className="flex items-center gap-3 flex-wrap text-xs text-gray-500">
           <span className="flex items-center gap-1">
             <Gift className="w-3.5 h-3.5" />
             {wishlist.item_count} {wishlist.item_count === 1 ? "желание" : wishlist.item_count < 5 ? "желания" : "желаний"}
@@ -67,6 +101,7 @@ export function WishlistCard({ wishlist, onDelete, onShare, index }: Props) {
               <EyeOff className="w-3.5 h-3.5" />Сюрприз
             </span>
           )}
+          {wishlist.event_date && <EventDateBadge eventDate={wishlist.event_date} />}
         </div>
       </div>
     </motion.div>

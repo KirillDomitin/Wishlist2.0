@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Flame, Star } from "lucide-react";
 import { Modal } from "./ui/Modal";
 import type { WishlistItem, WishlistItemCreate } from "../api/wishlists";
 import { wishlistApi } from "../api/wishlists";
@@ -13,17 +14,24 @@ interface Props {
 }
 
 interface PendingImage {
-  preview: string;         // blob URL or final URL
-  url: string;             // final URL (empty while uploading)
+  preview: string;
+  url: string;
   uploading: boolean;
   promise: Promise<string> | null;
 }
+
+const PRIORITY_OPTIONS = [
+  { value: 0, label: "Обычное", icon: null, active: "bg-gray-100 text-gray-600", inactive: "text-gray-400" },
+  { value: 1, label: "Хочу", icon: Star, active: "bg-purple-100 text-purple-700", inactive: "text-gray-400" },
+  { value: 2, label: "Очень хочу", icon: Flame, active: "bg-rose-100 text-rose-600", inactive: "text-gray-400" },
+] as const;
 
 export function AddItemModal({ open, onClose, editItem, onSubmit }: Props) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [url, setUrl] = useState("");
   const [price, setPrice] = useState("");
+  const [priority, setPriority] = useState(0);
   const [loading, setLoading] = useState(false);
 
   const [images, setImages] = useState<PendingImage[]>([]);
@@ -32,7 +40,7 @@ export function AddItemModal({ open, onClose, editItem, onSubmit }: Props) {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imagesRef = useRef<PendingImage[]>(images);
-  imagesRef.current = images; // always in sync, no stale closure
+  imagesRef.current = images;
 
   useEffect(() => {
     if (editItem) {
@@ -40,6 +48,7 @@ export function AddItemModal({ open, onClose, editItem, onSubmit }: Props) {
       setDescription(editItem.description ?? "");
       setUrl(editItem.url ?? "");
       setPrice(editItem.price != null ? String(editItem.price) : "");
+      setPriority(editItem.priority ?? 0);
       setImages(
         (editItem.image_urls ?? []).map((u) => ({
           preview: u,
@@ -50,7 +59,7 @@ export function AddItemModal({ open, onClose, editItem, onSubmit }: Props) {
       );
     } else {
       setTitle(""); setDescription(""); setUrl("");
-      setPrice(""); setImages([]);
+      setPrice(""); setPriority(0); setImages([]);
     }
     setImageMode("url");
     setUrlInput("");
@@ -59,10 +68,8 @@ export function AddItemModal({ open, onClose, editItem, onSubmit }: Props) {
   const addUploadedFile = async (file: File) => {
     const preview = URL.createObjectURL(file);
     const promise = wishlistApi.uploadImage(file);
-
     const pending: PendingImage = { preview, url: "", uploading: true, promise };
     setImages((prev) => [...prev, pending]);
-
     try {
       const uploadedUrl = await promise;
       setImages((prev) =>
@@ -80,10 +87,7 @@ export function AddItemModal({ open, onClose, editItem, onSubmit }: Props) {
   const addUrlImage = () => {
     const trimmed = urlInput.trim();
     if (!trimmed) return;
-    setImages((prev) => [
-      ...prev,
-      { preview: trimmed, url: trimmed, uploading: false, promise: null },
-    ]);
+    setImages((prev) => [...prev, { preview: trimmed, url: trimmed, uploading: false, promise: null }]);
     setUrlInput("");
   };
 
@@ -98,9 +102,7 @@ export function AddItemModal({ open, onClose, editItem, onSubmit }: Props) {
   };
 
   const handlePaste = (e: React.ClipboardEvent) => {
-    const items = Array.from(e.clipboardData.items).filter((i) =>
-      i.type.startsWith("image/")
-    );
+    const items = Array.from(e.clipboardData.items).filter((i) => i.type.startsWith("image/"));
     items.forEach((item) => {
       const file = item.getAsFile();
       if (file) addUploadedFile(file);
@@ -128,6 +130,7 @@ export function AddItemModal({ open, onClose, editItem, onSubmit }: Props) {
       price: price ? Number(price) : undefined,
       image_urls: resolvedUrls.filter((u): u is string => !!u),
       target_quantity: 1,
+      priority,
     });
     setLoading(false);
     onClose();
@@ -135,19 +138,13 @@ export function AddItemModal({ open, onClose, editItem, onSubmit }: Props) {
 
   const tabClass = (mode: ImageMode) =>
     `flex-1 py-1.5 text-xs font-medium transition-colors ${
-      imageMode === mode
-        ? "bg-indigo-600 text-white"
-        : "text-gray-500 hover:text-gray-700"
+      imageMode === mode ? "bg-indigo-600 text-white" : "text-gray-500 hover:text-gray-700"
     }`;
 
   const anyUploading = images.some((img) => img.uploading);
 
   return (
-    <Modal
-      open={open}
-      onClose={onClose}
-      title={editItem ? "Редактировать желание" : "Добавить желание"}
-    >
+    <Modal open={open} onClose={onClose} title={editItem ? "Редактировать желание" : "Добавить желание"}>
       <form onSubmit={handleSubmit} noValidate className="space-y-3">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Название *</label>
@@ -169,22 +166,43 @@ export function AddItemModal({ open, onClose, editItem, onSubmit }: Props) {
           <input className="input-field" type="url" placeholder="https://..." value={url} onChange={(e) => setUrl(e.target.value)} />
         </div>
 
+        {/* Priority selector */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">Важность</label>
+          <div className="flex gap-2">
+            {PRIORITY_OPTIONS.map((opt) => {
+              const Icon = opt.icon;
+              const isActive = priority === opt.value;
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => setPriority(opt.value)}
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+                    isActive
+                      ? `${opt.active} border-transparent`
+                      : "border-gray-200 text-gray-500 hover:border-gray-300"
+                  }`}
+                >
+                  {Icon && <Icon className="w-3.5 h-3.5" />}
+                  {opt.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         {/* Image section */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Картинки {images.length > 0 && <span className="text-gray-400 font-normal">({images.length})</span>}
           </label>
 
-          {/* Existing images */}
           {images.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-2">
               {images.map((img, i) => (
                 <div key={i} className="relative">
-                  <img
-                    src={img.preview}
-                    alt=""
-                    className="w-16 h-16 rounded-lg object-cover border border-gray-200"
-                  />
+                  <img src={img.preview} alt="" className="w-16 h-16 rounded-lg object-cover border border-gray-200" />
                   {img.uploading && (
                     <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-white/60">
                       <span className="text-[10px] text-gray-500">...</span>
@@ -202,14 +220,12 @@ export function AddItemModal({ open, onClose, editItem, onSubmit }: Props) {
             </div>
           )}
 
-          {/* Mode tabs */}
           <div className="flex border border-gray-200 rounded-lg overflow-hidden mb-2">
             <button type="button" className={tabClass("url")} onClick={() => setImageMode("url")}>Ссылка</button>
             <button type="button" className={tabClass("file")} onClick={() => setImageMode("file")}>Файл</button>
             <button type="button" className={tabClass("paste")} onClick={() => setImageMode("paste")}>Буфер</button>
           </div>
 
-          {/* URL mode */}
           {imageMode === "url" && (
             <div className="flex gap-2">
               <input
@@ -220,28 +236,13 @@ export function AddItemModal({ open, onClose, editItem, onSubmit }: Props) {
                 onChange={(e) => setUrlInput(e.target.value)}
                 onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addUrlImage(); } }}
               />
-              <button
-                type="button"
-                onClick={addUrlImage}
-                disabled={!urlInput.trim()}
-                className="btn-secondary shrink-0 px-3"
-              >
-                +
-              </button>
+              <button type="button" onClick={addUrlImage} disabled={!urlInput.trim()} className="btn-secondary shrink-0 px-3">+</button>
             </div>
           )}
 
-          {/* File mode */}
           {imageMode === "file" && (
             <>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                multiple
-                className="hidden"
-                onChange={handleFileChange}
-              />
+              <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleFileChange} />
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
@@ -255,7 +256,6 @@ export function AddItemModal({ open, onClose, editItem, onSubmit }: Props) {
             </>
           )}
 
-          {/* Paste mode */}
           {imageMode === "paste" && (
             <div
               tabIndex={0}

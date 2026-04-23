@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   ArrowLeft,
+  CalendarDays,
   Plus,
   Share2,
   EyeOff,
@@ -28,6 +29,19 @@ import { usersApi } from "../api/users";
 export interface ReserverInfo {
   name: string;
   quantity: number;
+}
+
+function formatEventDate(dateStr: string): string {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const target = new Date(dateStr);
+  target.setHours(0, 0, 0, 0);
+  const diff = Math.round((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
+  const formatted = target.toLocaleDateString("ru-RU", { day: "numeric", month: "long" });
+  if (diff === 0) return `${formatted} — сегодня!`;
+  if (diff > 0) return `${formatted} — через ${diff} ${diff === 1 ? "день" : diff < 5 ? "дня" : "дней"}`;
+  return formatted;
 }
 
 export default function WishlistDetailPage() {
@@ -125,6 +139,8 @@ export default function WishlistDetailPage() {
     );
   }
 
+  const sortedItems = [...current.items].sort((a, b) => b.priority - a.priority);
+
   return (
     <div className="page-bg min-h-screen relative">
       <Sparkles />
@@ -144,13 +160,19 @@ export default function WishlistDetailPage() {
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h1 className="text-2xl font-bold text-gray-800">{current.title}</h1>
-                {current.surprise_mode && (
-                  <div className="flex items-center gap-3 mt-2">
+                <div className="flex items-center gap-3 mt-2 flex-wrap">
+                  {current.event_date && (
+                    <span className="flex items-center gap-1 text-xs text-teal-700">
+                      <CalendarDays className="w-3.5 h-3.5" />
+                      {formatEventDate(current.event_date)}
+                    </span>
+                  )}
+                  {current.surprise_mode && (
                     <span className="flex items-center gap-1 text-xs text-amber-600">
                       <EyeOff className="w-3.5 h-3.5" />Режим сюрприза
                     </span>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
 
               <div className="flex gap-2">
@@ -175,7 +197,7 @@ export default function WishlistDetailPage() {
         </motion.div>
 
         {/* Items */}
-        {current.items.length === 0 ? (
+        {sortedItems.length === 0 ? (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -188,7 +210,7 @@ export default function WishlistDetailPage() {
           </motion.div>
         ) : (
           <div className="space-y-3">
-            {current.items.map((item, i) => (
+            {sortedItems.map((item, i) => (
               <WishlistItemCard
                 key={item.id}
                 item={item}

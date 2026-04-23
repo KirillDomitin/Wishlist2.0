@@ -36,6 +36,7 @@ class WishlistService:
             title=data.title,
             is_public=data.is_public,
             surprise_mode=data.surprise_mode,
+            event_date=data.event_date,
         )
         return WishlistSummaryResponse.model_validate(wishlist)
 
@@ -62,7 +63,7 @@ class WishlistService:
             **{
                 k: getattr(wishlist, k)
                 for k in ("id", "owner_id", "title", "is_public",
-                          "share_token", "surprise_mode", "created_at")
+                          "share_token", "surprise_mode", "event_date", "created_at")
             },
             items=items,
         )
@@ -77,7 +78,7 @@ class WishlistService:
             **{
                 k: getattr(wishlist, k)
                 for k in ("id", "owner_id", "title", "is_public",
-                          "share_token", "surprise_mode", "created_at")
+                          "share_token", "surprise_mode", "event_date", "created_at")
             },
             items=items,
         )
@@ -122,6 +123,7 @@ class WishlistService:
             price=data.price,
             image_urls=data.image_urls,
             target_quantity=data.target_quantity,
+            priority=data.priority,
         )
         await self._producer.publish(
             "item.created",

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Gift, Loader2, Link as LinkIcon } from "lucide-react";
+import { CalendarDays, Gift, Loader2, Link as LinkIcon } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { fetchSharedWishlist, clearShared } from "../store/wishlistSlice";
 import { createReservation } from "../store/reservationSlice";
@@ -105,6 +105,19 @@ export default function SharedWishlistPage() {
           <p className="text-gray-500 mt-1 text-sm">
             {shared.items.length} {shared.items.length === 1 ? "желание" : shared.items.length < 5 ? "желания" : "желаний"} в списке
           </p>
+          {shared.event_date && (() => {
+            const today = new Date(); today.setHours(0, 0, 0, 0);
+            const target = new Date(shared.event_date); target.setHours(0, 0, 0, 0);
+            const diff = Math.round((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+            if (diff < 0) return null;
+            const text = diff === 0 ? "сегодня!" : `через ${diff} ${diff === 1 ? "день" : diff < 5 ? "дня" : "дней"}`;
+            return (
+              <span className="inline-flex items-center gap-1.5 mt-2 text-xs font-medium text-teal-700 bg-teal-50 px-3 py-1 rounded-full">
+                <CalendarDays className="w-3.5 h-3.5" />
+                {text}
+              </span>
+            );
+          })()}
         </motion.div>
 
         {/* Items */}
@@ -114,7 +127,7 @@ export default function SharedWishlistPage() {
           </div>
         ) : (
           <div className="space-y-3">
-            {shared.items.map((item, i) => (
+            {[...shared.items].sort((a, b) => b.priority - a.priority).map((item, i) => (
               <WishlistItemCard
                 key={item.id}
                 item={item}

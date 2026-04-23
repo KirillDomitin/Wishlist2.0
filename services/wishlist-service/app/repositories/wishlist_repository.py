@@ -1,4 +1,5 @@
 import uuid
+from datetime import date
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -45,12 +46,14 @@ class WishlistRepository:
         title: str,
         is_public: bool,
         surprise_mode: bool,
+        event_date: date | None = None,
     ) -> Wishlist:
         wishlist = Wishlist(
             owner_id=owner_id,
             title=title,
             is_public=is_public,
             surprise_mode=surprise_mode,
+            event_date=event_date,
         )
         self._session.add(wishlist)
         await self._session.commit()

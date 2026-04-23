@@ -1,6 +1,6 @@
 import { useState } from "react";
+import { CalendarDays, EyeOff } from "lucide-react";
 import { Modal } from "./ui/Modal";
-import { EyeOff } from "lucide-react";
 
 interface Props {
   open: boolean;
@@ -8,21 +8,29 @@ interface Props {
   onSubmit: (data: {
     title: string;
     surprise_mode: boolean;
+    event_date: string | null;
   }) => Promise<void>;
 }
 
 export function CreateWishlistModal({ open, onClose, onSubmit }: Props) {
   const [title, setTitle] = useState("");
   const [surpriseMode, setSurpriseMode] = useState(false);
+  const [eventDate, setEventDate] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
     setLoading(true);
-    await onSubmit({ title: title.trim(), surprise_mode: surpriseMode });
+    await onSubmit({
+      title: title.trim(),
+      surprise_mode: surpriseMode,
+      event_date: eventDate || null,
+    });
     setLoading(false);
     setTitle("");
+    setSurpriseMode(false);
+    setEventDate("");
     onClose();
   };
 
@@ -39,6 +47,19 @@ export function CreateWishlistModal({ open, onClose, onSubmit }: Props) {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             autoFocus
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5 flex items-center gap-1.5">
+            <CalendarDays className="w-4 h-4 text-gray-400" />
+            Дата события
+          </label>
+          <input
+            className="input-field"
+            type="date"
+            value={eventDate}
+            onChange={(e) => setEventDate(e.target.value)}
           />
         </div>
 
