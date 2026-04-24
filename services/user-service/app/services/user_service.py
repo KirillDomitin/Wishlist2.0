@@ -31,11 +31,29 @@ _PENDING_REG_TTL = 900  # 15 minutes
 
 
 class UserService:
+    """Business logic for user registration, authentication, and profile management.
+
+    Args:
+        session: Active async database session.
+        redis: Active Redis client, required for token storage and temporary codes.
+    """
+
     def __init__(self, session: AsyncSession, redis: Redis | None = None) -> None:
         self._repo = UserRepository(session)
         self._redis = redis
 
     async def initiate_register(self, data: UserRegisterRequest) -> RegisterInitiateResponse:
+        """Begin registration by sending a verification code to the user's email.
+
+        Args:
+            data: Registration payload containing email, password, and name.
+
+        Returns:
+            A response message confirming the code was sent.
+
+        Raises:
+            ConflictError: If the email address is already registered.
+        """
         if await self._repo.get_by_email(data.email):
             raise ConflictError("Email already registered")
 
@@ -55,6 +73,19 @@ class UserService:
         return RegisterInitiateResponse(message="Код подтверждения отправлен на email")
 
     async def verify_email(self, data: VerifyEmailRequest) -> TokenResponse:
+        """Verify the email code, create the user account, and return tokens.
+
+        Args:
+            data: Payload containing email and the 6-digit verification code.
+
+        Returns:
+            Access and refresh token pair.
+
+        Raises:
+            NotFoundError: If the pending registration has expired.
+            UnauthorizedError: If the verification code is incorrect.
+            ConflictError: If the email was registered between initiation and verification.
+        """
         raw = await self._redis.get(f"pending_reg:{data.email}")
         if not raw:
             raise NotFoundError("Код истёк или не найден. Зарегистрируйтесь заново.")
@@ -78,6 +109,17 @@ class UserService:
         )
 
     async def login(self, data: UserLoginRequest) -> TokenResponse:
+        """Authenticate a user and return a new token pair.
+
+        Args:
+            data: Login payload containing email and password.
+
+        Returns:
+            Access and refresh token pair.
+
+        Raises:
+            UnauthorizedError: If credentials are invalid.
+        """
         user = await self._repo.get_by_email(data.email)
         if not user or not _pwd_context.verify(data.password, user.password_hash):
             raise UnauthorizedError("Invalid credentials")
@@ -90,6 +132,17 @@ class UserService:
         )
 
     async def refresh(self, token: str) -> TokenResponse:
+        """Rotate a refresh token and issue a new access/refresh token pair.
+
+        Args:
+            token: Current refresh token string.
+
+        Returns:
+            New access and refresh token pair.
+
+        Raises:
+            UnauthorizedError: If the token is invalid, expired, or already used.
+        """
         user_id, jti = decode_refresh_token(token)
         valid = await validate_and_rotate(self._redis, jti, user_id)
         if not valid:
@@ -102,16 +155,40 @@ class UserService:
         )
 
     async def logout(self, token: str) -> None:
+        """Revoke the given refresh token, preventing further use.
+
+        Args:
+            token: Refresh token string to revoke.
+        """
         user_id, jti = decode_refresh_token(token)
         await revoke_refresh_token(self._redis, jti)
 
     async def get_by_id(self, user_id: uuid.UUID) -> UserResponse:
+        """Fetch a user by primary key and return a response schema.
+
+        Args:
+            user_id: User primary key.
+
+        Returns:
+            User response schema.
+
+        Raises:
+            NotFoundError: If the user does not exist.
+        """
         user = await self._repo.get_by_id(user_id)
         if not user:
             raise NotFoundError("User not found")
         return UserResponse.model_validate(user)
 
     async def forgot_password(self, data: ForgotPasswordRequest) -> None:
+        """Initiate a password reset flow by emailing a reset link.
+
+        If the email is not registered the request silently succeeds to avoid
+        revealing whether an account exists.
+
+        Args:
+            data: Payload containing the user's email address.
+        """
         user = await self._repo.get_by_email(data.email)
         if not user:
             return  # silent — don't reveal whether email is registered
@@ -120,6 +197,14 @@ class UserService:
         await send_password_reset_email(data.email, token)
 
     async def reset_password(self, data: ResetPasswordRequest) -> None:
+        """Set a new password using a valid password-reset token.
+
+        Args:
+            data: Payload containing the reset token and new password.
+
+        Raises:
+            NotFoundError: If the reset token is invalid or has expired.
+        """
         raw = await self._redis.get(f"reset_pwd:{data.token}")
         if not raw:
             raise NotFoundError("Ссылка недействительна или истекла")
@@ -129,6 +214,19 @@ class UserService:
         await self._redis.delete(f"reset_pwd:{data.token}")
 
     async def update_me(self, user_id: uuid.UUID, data: UserUpdateRequest) -> UserResponse:
+        """Update the authenticated user's name and/or password.
+
+        Args:
+            user_id: ID of the user to update.
+            data: Update payload; ``new_password`` requires ``current_password``.
+
+        Returns:
+            Updated user response schema.
+
+        Raises:
+            NotFoundError: If the user does not exist.
+            UnauthorizedError: If current password is missing or incorrect.
+        """
         user = await self._repo.get_by_id(user_id)
         if not user:
             raise NotFoundError("User not found")

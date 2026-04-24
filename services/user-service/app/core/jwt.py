@@ -8,13 +8,28 @@ from app.core.exceptions import UnauthorizedError
 
 
 def create_access_token(user_id: str) -> str:
+    """Create a signed JWT access token for the given user.
+
+    Args:
+        user_id: User primary key as a string.
+
+    Returns:
+        Encoded JWT string.
+    """
     expire = datetime.now(timezone.utc) + timedelta(minutes=settings.JWT_EXPIRE_MINUTES)
     payload = {"sub": user_id, "exp": expire, "type": "access"}
     return jwt.encode(payload, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
 
 
 def create_refresh_token(user_id: str) -> tuple[str, str]:
-    """Returns (token, jti). jti is used as the Redis key."""
+    """Create a signed JWT refresh token with a unique JTI claim.
+
+    Args:
+        user_id: User primary key as a string.
+
+    Returns:
+        A ``(token, jti)`` tuple where *jti* is used as the Redis key.
+    """
     jti = str(uuid.uuid4())
     expire = datetime.now(timezone.utc) + timedelta(days=settings.JWT_REFRESH_EXPIRE_DAYS)
     payload = {"sub": user_id, "exp": expire, "type": "refresh", "jti": jti}
@@ -23,6 +38,17 @@ def create_refresh_token(user_id: str) -> tuple[str, str]:
 
 
 def decode_access_token(token: str) -> str:
+    """Decode and validate a JWT access token.
+
+    Args:
+        token: Encoded JWT string.
+
+    Returns:
+        The ``sub`` claim (user ID).
+
+    Raises:
+        UnauthorizedError: If the token is invalid, expired, or has the wrong type.
+    """
     try:
         payload = jwt.decode(
             token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM]
@@ -38,7 +64,17 @@ def decode_access_token(token: str) -> str:
 
 
 def decode_refresh_token(token: str) -> tuple[str, str]:
-    """Returns (user_id, jti)."""
+    """Decode and validate a JWT refresh token.
+
+    Args:
+        token: Encoded JWT string.
+
+    Returns:
+        A ``(user_id, jti)`` tuple.
+
+    Raises:
+        UnauthorizedError: If the token is invalid, expired, or has the wrong type.
+    """
     try:
         payload = jwt.decode(
             token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM]

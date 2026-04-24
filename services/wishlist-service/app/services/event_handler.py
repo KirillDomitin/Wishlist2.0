@@ -5,7 +5,16 @@ from app.repositories.item_repository import WishlistItemRepository
 
 
 async def handle_reservation_event(event_type: str, data: dict[str, str]) -> None:
-    """Consumes events from reservation-service and updates reserved_count."""
+    """Process reservation lifecycle events and update item reserved counts.
+
+    Handles ``reservation.created`` (increments) and ``reservation.cancelled``
+    (decrements) to keep ``WishlistItem.reserved_count`` in sync with the
+    reservation service.
+
+    Args:
+        event_type: One of ``reservation.created``, ``reservation.cancelled``.
+        data: Event payload fields as string key-value pairs.
+    """
     item_id = uuid.UUID(data["item_id"])
     quantity = int(data.get("quantity", "1"))
 

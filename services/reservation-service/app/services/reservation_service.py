@@ -15,6 +15,13 @@ _STREAM_RESERVATIONS = "stream:reservations"
 
 
 class ReservationService:
+    """Business logic for creating, cancelling, and querying reservations.
+
+    Args:
+        session: Active async database session.
+        redis: Active Redis client used for event publishing.
+    """
+
     def __init__(self, session: AsyncSession, redis: Redis) -> None:
         self._item_repo = ItemReadModelRepository(session)
         self._repo = ReservationRepository(session)
@@ -23,6 +30,20 @@ class ReservationService:
     async def create(
         self, reserver_id: uuid.UUID, data: ReservationCreate
     ) -> ReservationResponse:
+        """Create a reservation after validating availability and ownership.
+
+        Args:
+            reserver_id: ID of the user making the reservation.
+            data: Reservation creation payload.
+
+        Returns:
+            The created reservation response schema.
+
+        Raises:
+            NotFoundError: If the item does not exist or has been deleted.
+            ForbiddenError: If the user tries to reserve their own item.
+            ConflictError: If requested quantity exceeds available slots.
+        """
         item = await self._item_repo.get(data.item_id)
         if item is None or item.is_deleted:
             raise NotFoundError("Item not found")
@@ -56,6 +77,20 @@ class ReservationService:
     async def cancel(
         self, reservation_id: uuid.UUID, reserver_id: uuid.UUID
     ) -> ReservationResponse:
+        """Cancel an active reservation owned by the requesting user.
+
+        Args:
+            reservation_id: ID of the reservation to cancel.
+            reserver_id: ID of the user requesting cancellation.
+
+        Returns:
+            The updated reservation response schema.
+
+        Raises:
+            NotFoundError: If the reservation does not exist.
+            ForbiddenError: If the user does not own the reservation.
+            ConflictError: If the reservation is already cancelled.
+        """
         reservation = await self._repo.get(reservation_id)
         if reservation is None:
             raise NotFoundError("Reservation not found")
@@ -83,9 +118,25 @@ class ReservationService:
         return ReservationResponse.model_validate(reservation)
 
     async def list_my(self, reserver_id: uuid.UUID) -> list[ReservationResponse]:
+        """Return all reservations belonging to a user.
+
+        Args:
+            reserver_id: User ID of the reserver.
+
+        Returns:
+            List of reservation response schemas.
+        """
         reservations = await self._repo.list_by_reserver(reserver_id)
         return [ReservationResponse.model_validate(r) for r in reservations]
 
     async def list_for_wishlist(self, wishlist_id: uuid.UUID) -> list[ItemReservationInfo]:
+        """Return active reservations for all items in a wishlist.
+
+        Args:
+            wishlist_id: Parent wishlist ID.
+
+        Returns:
+            List of item reservation info schemas.
+        """
         reservations = await self._repo.list_active_for_wishlist(wishlist_id)
         return [ItemReservationInfo.model_validate(r) for r in reservations]

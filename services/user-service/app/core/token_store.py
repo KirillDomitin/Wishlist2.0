@@ -14,15 +14,31 @@ def _blacklist_key(jti: str) -> str:
 
 
 async def store_refresh_token(redis: Redis, jti: str, user_id: str) -> None:
+    """Store an active refresh token JTI in Redis.
+
+    Args:
+        redis: Active Redis client.
+        jti: JWT ID claim used as the Redis key suffix.
+        user_id: User ID associated with the token.
+    """
     await redis.set(_active_key(jti), user_id, ex=_REFRESH_TTL)
 
 
 async def validate_and_rotate(
     redis: Redis, jti: str, user_id: str
 ) -> bool:
-    """
-    Atomically checks that jti is active and not blacklisted,
-    then moves it to the blacklist. Returns False if invalid.
+    """Atomically validate a refresh token JTI and move it to the blacklist.
+
+    Checks that the JTI is active and not blacklisted, then deletes the active
+    key and writes a blacklist entry to prevent reuse.
+
+    Args:
+        redis: Active Redis client.
+        jti: JWT ID claim to validate.
+        user_id: Expected user ID stored under this JTI.
+
+    Returns:
+        ``True`` if the token was valid and rotated; ``False`` otherwise.
     """
     blacklisted = await redis.exists(_blacklist_key(jti))
     if blacklisted:
@@ -37,5 +53,11 @@ async def validate_and_rotate(
 
 
 async def revoke_refresh_token(redis: Redis, jti: str) -> None:
+    """Revoke a refresh token by deleting the active key and blacklisting the JTI.
+
+    Args:
+        redis: Active Redis client.
+        jti: JWT ID claim to revoke.
+    """
     await redis.delete(_active_key(jti))
     await redis.set(_blacklist_key(jti), "1", ex=_REFRESH_TTL)

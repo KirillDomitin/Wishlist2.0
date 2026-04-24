@@ -9,5 +9,10 @@ AsyncSessionLocal = async_sessionmaker(engine, expire_on_commit=False)
 
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
+    """Yield an async database session, closing it on exit.
+
+    Yields:
+        An open AsyncSession bound to the configured engine.
+    """
     async with AsyncSessionLocal() as session:
         yield session

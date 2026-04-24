@@ -18,6 +18,7 @@ async def get_me(
     user_id: str = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
 ) -> UserResponse:
+    """Return the profile of the authenticated user."""
     return await UserService(db).get_by_id(uuid.UUID(user_id))
 
 
@@ -28,6 +29,7 @@ async def update_me(
     db: AsyncSession = Depends(get_db),
     redis: Redis = Depends(get_redis),
 ) -> UserResponse:
+    """Update the authenticated user's name and/or password."""
     return await UserService(db, redis).update_me(uuid.UUID(user_id), data)
 
 
@@ -37,4 +39,5 @@ async def get_user(
     _caller_id: str = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
 ) -> UserResponse:
+    """Return the public profile of a user by ID."""
     return await UserService(db).get_by_id(user_id)

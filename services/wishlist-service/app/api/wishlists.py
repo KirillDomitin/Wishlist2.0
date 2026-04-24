@@ -28,6 +28,7 @@ def _svc(db: AsyncSession = Depends(get_db)) -> WishlistService:
 
 @router.get("/shared/{token}", response_model=WishlistDetailResponse)
 async def get_shared(token: str, svc: WishlistService = Depends(_svc)) -> WishlistDetailResponse:
+    """Return the public view of a wishlist by its share token."""
     return await svc.get_by_share_token(token)
 
 
@@ -38,6 +39,7 @@ async def list_my(
     user_id: str = Depends(get_current_user_id),
     svc: WishlistService = Depends(_svc),
 ) -> list[WishlistSummaryResponse]:
+    """List all wishlists belonging to the authenticated user."""
     return await svc.list_my(uuid.UUID(user_id))
 
 
@@ -47,6 +49,7 @@ async def create(
     user_id: str = Depends(get_current_user_id),
     svc: WishlistService = Depends(_svc),
 ) -> WishlistSummaryResponse:
+    """Create a new wishlist for the authenticated user."""
     return await svc.create(uuid.UUID(user_id), data)
 
 
@@ -56,6 +59,7 @@ async def get_detail(
     user_id: str = Depends(get_current_user_id),
     svc: WishlistService = Depends(_svc),
 ) -> WishlistDetailResponse:
+    """Return the full detail of a wishlist owned by the authenticated user."""
     return await svc.get_detail(wishlist_id, uuid.UUID(user_id))
 
 
@@ -66,6 +70,7 @@ async def update(
     user_id: str = Depends(get_current_user_id),
     svc: WishlistService = Depends(_svc),
 ) -> WishlistSummaryResponse:
+    """Apply a partial update to a wishlist owned by the authenticated user."""
     return await svc.update(wishlist_id, uuid.UUID(user_id), data)
 
 
@@ -75,6 +80,7 @@ async def delete(
     user_id: str = Depends(get_current_user_id),
     svc: WishlistService = Depends(_svc),
 ) -> None:
+    """Delete a wishlist owned by the authenticated user."""
     await svc.delete(wishlist_id, uuid.UUID(user_id))
 
 
@@ -87,6 +93,7 @@ async def add_item(
     user_id: str = Depends(get_current_user_id),
     svc: WishlistService = Depends(_svc),
 ) -> WishlistItemResponse:
+    """Add a new item to a wishlist owned by the authenticated user."""
     return await svc.add_item(wishlist_id, uuid.UUID(user_id), data)
 
 
@@ -98,6 +105,7 @@ async def update_item(
     user_id: str = Depends(get_current_user_id),
     svc: WishlistService = Depends(_svc),
 ) -> WishlistItemResponse:
+    """Apply a partial update to an item in a wishlist owned by the authenticated user."""
     return await svc.update_item(wishlist_id, item_id, uuid.UUID(user_id), data)
 
 
@@ -108,4 +116,5 @@ async def delete_item(
     user_id: str = Depends(get_current_user_id),
     svc: WishlistService = Depends(_svc),
 ) -> None:
+    """Delete an item from a wishlist owned by the authenticated user."""
     await svc.delete_item(wishlist_id, item_id, uuid.UUID(user_id))

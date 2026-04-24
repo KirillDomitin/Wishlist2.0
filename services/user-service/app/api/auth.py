@@ -27,6 +27,7 @@ async def register(
     db: AsyncSession = Depends(get_db),
     redis: Redis = Depends(get_redis),
 ) -> RegisterInitiateResponse:
+    """Initiate user registration by sending a verification code to the provided email."""
     return await UserService(db, redis).initiate_register(data)
 
 
@@ -36,6 +37,7 @@ async def verify_email(
     db: AsyncSession = Depends(get_db),
     redis: Redis = Depends(get_redis),
 ) -> TokenResponse:
+    """Verify the email code and complete account creation, returning a token pair."""
     return await UserService(db, redis).verify_email(data)
 
 
@@ -45,6 +47,7 @@ async def login(
     db: AsyncSession = Depends(get_db),
     redis: Redis = Depends(get_redis),
 ) -> TokenResponse:
+    """Authenticate a user with email and password, returning a token pair."""
     return await UserService(db, redis).login(data)
 
 
@@ -54,6 +57,7 @@ async def refresh(
     db: AsyncSession = Depends(get_db),
     redis: Redis = Depends(get_redis),
 ) -> TokenResponse:
+    """Rotate a refresh token and return a new access/refresh token pair."""
     return await UserService(db, redis).refresh(data.refresh_token)
 
 
@@ -63,6 +67,7 @@ async def logout(
     db: AsyncSession = Depends(get_db),
     redis: Redis = Depends(get_redis),
 ) -> None:
+    """Revoke the provided refresh token, ending the session."""
     await UserService(db, redis).logout(data.refresh_token)
 
 
@@ -72,6 +77,7 @@ async def forgot_password(
     db: AsyncSession = Depends(get_db),
     redis: Redis = Depends(get_redis),
 ) -> None:
+    """Send a password-reset link to the provided email address if it is registered."""
     await UserService(db, redis).forgot_password(data)
 
 
@@ -81,4 +87,5 @@ async def reset_password(
     db: AsyncSession = Depends(get_db),
     redis: Redis = Depends(get_redis),
 ) -> None:
+    """Reset the user's password using the token received by email."""
     await UserService(db, redis).reset_password(data)

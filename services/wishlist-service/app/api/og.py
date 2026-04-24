@@ -47,6 +47,11 @@ def _build_html(title: str, description: str, image_url: str, page_url: str) -> 
 
 @router.get("/shared/{token}", response_class=HTMLResponse)
 async def og_shared(token: str, svc: WishlistService = Depends(_svc)) -> HTMLResponse:
+    """Return an HTML page with Open Graph meta tags for the shared wishlist.
+
+    Used by Telegram and other link-preview crawlers to render rich previews.
+    Falls back to generic metadata if the token is invalid.
+    """
     try:
         wishlist = await svc.get_by_share_token(token)
     except NotFoundError:

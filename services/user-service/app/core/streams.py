@@ -6,17 +6,42 @@ from redis.asyncio import Redis
 
 
 class StreamProducer:
+    """Publishes events to a Redis Stream.
+
+    Args:
+        redis: Active Redis client.
+        stream_name: Target Redis stream key.
+    """
+
     def __init__(self, redis: Redis, stream_name: str) -> None:
         self._redis = redis
         self._stream_name = stream_name
 
     async def publish(self, event_type: str, data: dict[str, Any]) -> str:
+        """Append an event to the stream.
+
+        Args:
+            event_type: Logical event identifier (e.g. ``reservation.created``).
+            data: Payload fields; all values are serialized to strings.
+
+        Returns:
+            The Redis message ID assigned to the appended entry.
+        """
         payload = {"event_type": event_type} | {k: str(v) for k, v in data.items()}
         msg_id: str = await self._redis.xadd(self._stream_name, payload)
         return msg_id
 
 
 class StreamConsumer:
+    """Reads events from a Redis Stream consumer group.
+
+    Args:
+        redis: Active Redis client.
+        stream_name: Source Redis stream key.
+        group_name: Consumer group name; created automatically if absent.
+        consumer_name: Unique name for this consumer instance.
+    """
+
     def __init__(
         self,
         redis: Redis,
@@ -43,6 +68,17 @@ class StreamConsumer:
         batch_size: int = 10,
         block_ms: int = 2000,
     ) -> None:
+        """Poll the stream and dispatch messages to *handler* in a loop.
+
+        Runs until the enclosing asyncio task is cancelled. Successfully
+        processed messages are acknowledged; failed messages stay pending
+        and will be retried on the next restart.
+
+        Args:
+            handler: Async callable that receives ``(event_type, fields)``.
+            batch_size: Maximum messages to read per poll.
+            block_ms: Milliseconds to block waiting for new messages.
+        """
         await self._ensure_group()
         while True:
             try:

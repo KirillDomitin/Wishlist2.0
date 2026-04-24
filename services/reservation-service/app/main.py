@@ -16,6 +16,7 @@ _CONSUMER_NAME = "reservation-consumer-1"
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+    """Initialize Redis and the wishlist-items stream consumer on startup; clean up on shutdown."""
     await init_redis()
 
     consumer = StreamConsumer(

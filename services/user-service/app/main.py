@@ -14,6 +14,7 @@ from app.services.notification_service import handle_reservation_event
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+    """Initialize Redis and the reservations stream consumer on startup; clean up on shutdown."""
     await init_redis()
     consumer = StreamConsumer(
         redis=get_redis(),

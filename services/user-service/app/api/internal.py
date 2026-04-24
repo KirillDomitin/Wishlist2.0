@@ -8,6 +8,10 @@ router = APIRouter()
 
 @router.get("/internal/verify")
 async def verify_token(request: Request) -> Response:
+    """Verify a Bearer JWT and return the user ID in the X-User-Id response header.
+
+    Called by the Nginx gateway to authenticate upstream requests.
+    """
     auth_header = request.headers.get("Authorization", "")
     if not auth_header.startswith("Bearer "):
         raise UnauthorizedError()

@@ -6,6 +6,15 @@ from app.repositories.reservation_repository import ItemReadModelRepository
 
 
 async def handle_wishlist_item_event(event_type: str, data: dict[str, str]) -> None:
+    """Process item lifecycle events from the wishlist service.
+
+    Handles ``item.created`` and ``item.deleted`` to keep the local
+    ItemReadModel in sync with wishlist-service data.
+
+    Args:
+        event_type: One of ``item.created``, ``item.deleted``.
+        data: Event payload fields as string key-value pairs.
+    """
     async with AsyncSessionLocal() as session:
         repo = ItemReadModelRepository(session)
 
@@ -24,14 +33,6 @@ async def handle_wishlist_item_event(event_type: str, data: dict[str, str]) -> N
                 owner_id=uuid.UUID(raw_owner_id) if raw_owner_id else None,
                 surprise_mode=data.get("surprise_mode", "False").lower() == "true",
             )
-
-        elif event_type == "item.updated":
-            target_quantity = data.get("target_quantity")
-            if target_quantity is not None:
-                item = await repo.get(uuid.UUID(data["item_id"]))
-                if item:
-                    item.target_quantity = int(target_quantity)
-                    await session.commit()
 
         elif event_type == "item.deleted":
             await repo.mark_deleted(uuid.UUID(data["item_id"]))

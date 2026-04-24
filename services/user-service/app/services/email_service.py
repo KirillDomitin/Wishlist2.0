@@ -128,11 +128,23 @@ async def _send(to_email: str, subject: str, body_html: str) -> None:
 
 
 async def send_verification_email(to_email: str, code: str) -> None:
+    """Send an HTML email containing the 6-digit email verification code.
+
+    Args:
+        to_email: Recipient email address.
+        code: 6-digit verification code.
+    """
     body_html = _VERIFICATION_BODY.format(code=code)
     await _send(to_email, "Код подтверждения регистрации", body_html)
 
 
 async def send_password_reset_email(to_email: str, token: str) -> None:
+    """Send an HTML email containing the password-reset link.
+
+    Args:
+        to_email: Recipient email address.
+        token: Opaque URL-safe token embedded in the reset link.
+    """
     reset_url = f"{settings.FRONTEND_URL}/reset-password?token={token}"
     body_html = _RESET_BODY.format(reset_url=reset_url)
     await _send(to_email, "Сброс пароля — Wishlist", body_html)

@@ -152,6 +152,15 @@ async def _send_email(to_email: str, subject: str, html: str) -> None:
 
 
 async def handle_reservation_event(event_type: str, data: dict[str, str]) -> None:
+    """Process reservation lifecycle events and email the wishlist owner.
+
+    Handles ``reservation.created`` and ``reservation.cancelled``. Skips
+    silently if owner is missing or the event type is unrecognised.
+
+    Args:
+        event_type: One of ``reservation.created``, ``reservation.cancelled``.
+        data: Event payload fields as string key-value pairs.
+    """
     owner_id = data.get("owner_id", "")
     reserver_id = data.get("reserver_id", "")
     item_title = data.get("item_title", "подарок")

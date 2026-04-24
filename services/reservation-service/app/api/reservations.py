@@ -21,6 +21,7 @@ async def list_my(
     user_id: str = Depends(get_current_user_id),
     svc: ReservationService = Depends(_svc),
 ) -> list[ReservationResponse]:
+    """List all reservations belonging to the authenticated user."""
     return await svc.list_my(uuid.UUID(user_id))
 
 
@@ -30,6 +31,7 @@ async def create(
     user_id: str = Depends(get_current_user_id),
     svc: ReservationService = Depends(_svc),
 ) -> ReservationResponse:
+    """Create a new reservation for the specified item."""
     return await svc.create(uuid.UUID(user_id), data)
 
 
@@ -39,6 +41,7 @@ async def cancel(
     user_id: str = Depends(get_current_user_id),
     svc: ReservationService = Depends(_svc),
 ) -> None:
+    """Cancel an active reservation owned by the authenticated user."""
     await svc.cancel(reservation_id, uuid.UUID(user_id))
 
 
@@ -48,4 +51,5 @@ async def list_for_wishlist(
     _user_id: str = Depends(get_current_user_id),
     svc: ReservationService = Depends(_svc),
 ) -> list[ItemReservationInfo]:
+    """List active reservations for all items in the specified wishlist."""
     return await svc.list_for_wishlist(wishlist_id)

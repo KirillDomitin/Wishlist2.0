@@ -14,9 +14,22 @@ _MAX_SIZE = 10 * 1024 * 1024  # 10 MB
 
 
 class UploadService:
+    """Handles saving user-uploaded image files to local storage."""
+
     @staticmethod
     async def save_image(file: UploadFile) -> str:
-        """Save uploaded image to /uploads/, return public URL path."""
+        """Validate and persist an uploaded image, returning its public URL path.
+
+        Args:
+            file: The uploaded file from the multipart request.
+
+        Returns:
+            The public URL path (e.g. ``/uploads/<uuid>.<ext>``).
+
+        Raises:
+            HTTPException: With status 400 if the file type is unsupported or
+                the file exceeds the 10 MB size limit.
+        """
         if file.content_type not in _ALLOWED_TYPES:
             raise HTTPException(
                 status_code=400,
