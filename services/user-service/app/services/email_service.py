@@ -1,8 +1,11 @@
+import logging
 from email.message import EmailMessage
 
 import aiosmtplib
 
 from app.core.config import settings
+
+logger = logging.getLogger(__name__)
 
 _BASE_HTML = """\
 <!DOCTYPE html>
@@ -116,15 +119,21 @@ async def _send(to_email: str, subject: str, body_html: str) -> None:
     msg.add_alternative(html, subtype="html")
 
     smtp_user = settings.SMTP_USER or settings.SMTP_FROM
-    await aiosmtplib.send(
-        msg,
-        hostname=settings.SMTP_HOST,
-        port=settings.SMTP_PORT,
-        username=smtp_user,
-        password=settings.SMTP_PASSWORD,
-        use_tls=settings.SMTP_USE_SSL,
-        start_tls=not settings.SMTP_USE_SSL,
-    )
+    logger.info("Sending email to=%s subject=%r via %s:%d", to_email, subject, settings.SMTP_HOST, settings.SMTP_PORT)
+    try:
+        await aiosmtplib.send(
+            msg,
+            hostname=settings.SMTP_HOST,
+            port=settings.SMTP_PORT,
+            username=smtp_user,
+            password=settings.SMTP_PASSWORD,
+            use_tls=settings.SMTP_USE_SSL,
+            start_tls=not settings.SMTP_USE_SSL,
+        )
+        logger.info("Email delivered to=%s", to_email)
+    except Exception:
+        logger.exception("SMTP error sending to=%s", to_email)
+        raise
 
 
 async def send_verification_email(to_email: str, code: str) -> None:
