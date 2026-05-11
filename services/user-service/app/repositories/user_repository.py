@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.user import User
 
 
+
 class UserRepository:
     """Repository for User persistence operations.
 
@@ -61,11 +62,33 @@ class UserRepository:
         await self._session.refresh(user)
         return user
 
+    async def get_all(self) -> list[User]:
+        """Return all users ordered by creation date."""
+        result = await self._session.execute(
+            select(User).order_by(User.created_at.desc())
+        )
+        return list(result.scalars().all())
+
+    async def delete_by_id(self, user_id: uuid.UUID) -> bool:
+        """Delete a user by primary key.
+
+        Returns:
+            ``True`` if deleted, ``False`` if not found.
+        """
+        user = await self._session.get(User, user_id)
+        if not user:
+            return False
+        await self._session.delete(user)
+        await self._session.commit()
+        return True
+
     async def update(
         self,
         user_id: uuid.UUID,
         name: str | None = None,
         password_hash: str | None = None,
+        email: str | None = None,
+        is_admin: bool | None = None,
     ) -> User | None:
         """Update a user's name and/or password hash.
 
@@ -84,6 +107,10 @@ class UserRepository:
             user.name = name
         if password_hash is not None:
             user.password_hash = password_hash
+        if email is not None:
+            user.email = email
+        if is_admin is not None:
+            user.is_admin = is_admin
         await self._session.commit()
         await self._session.refresh(user)
         return user

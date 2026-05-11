@@ -4,9 +4,11 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+from app.api.admin import router as admin_router
 from app.api.og import router as og_router
 from app.api.uploads import router as uploads_router
 from app.api.wishlists import router as wishlists_router
+from app.core.logging_setup import setup_logging
 from app.core.redis_client import close_redis, get_redis, init_redis
 from app.core.streams import StreamConsumer
 from app.services.event_handler import handle_reservation_event
@@ -19,6 +21,7 @@ _CONSUMER_NAME = "wishlist-consumer-1"
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Initialize Redis and the reservations stream consumer on startup; clean up on shutdown."""
+    setup_logging()
     await init_redis()
 
     consumer = StreamConsumer(
@@ -40,3 +43,4 @@ app = FastAPI(title="Wishlist Service", version="1.0.0", lifespan=lifespan)
 app.include_router(og_router)
 app.include_router(wishlists_router)
 app.include_router(uploads_router)
+app.include_router(admin_router)

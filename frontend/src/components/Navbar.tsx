@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Gift, Bookmark, LogOut, Sparkles, User } from "lucide-react";
+import { Gift, Bookmark, LogOut, Sparkles, User, ShieldCheck } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { logout } from "../store/authSlice";
 
@@ -8,6 +8,7 @@ export function Navbar() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const name = useAppSelector((s) => s.auth.name);
+  const isAdmin = useAppSelector((s) => s.auth.isAdmin);
 
   const handleLogout = () => {
     dispatch(logout());
@@ -37,6 +38,12 @@ export function Navbar() {
             <Bookmark className="w-4 h-4" />
             <span className="hidden sm:inline">Бронирования</span>
           </Link>
+          {isAdmin && (
+            <Link to="/admin" className="btn-ghost text-purple-600 hover:text-purple-700 hover:bg-purple-50">
+              <ShieldCheck className="w-4 h-4" />
+              <span className="hidden sm:inline">Админ</span>
+            </Link>
+          )}
           {name && (
             <Link to="/profile" className="hidden sm:flex items-center gap-1.5 text-sm text-gray-600 font-medium px-3 rounded-xl hover:bg-white/60 hover:text-purple-700 transition-all duration-200">
               <User className="w-4 h-4 text-purple-400" />

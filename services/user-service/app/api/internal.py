@@ -17,6 +17,9 @@ async def verify_token(request: Request) -> Response:
         raise UnauthorizedError()
 
     token = auth_header.removeprefix("Bearer ")
-    user_id = decode_access_token(token)
+    user_id, is_admin = decode_access_token(token)
 
-    return Response(status_code=200, headers={"X-User-Id": user_id})
+    return Response(status_code=200, headers={
+        "X-User-Id": user_id,
+        "X-User-Is-Admin": str(is_admin).lower(),
+    })

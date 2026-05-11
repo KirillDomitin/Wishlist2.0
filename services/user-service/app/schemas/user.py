@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
@@ -27,6 +28,7 @@ class UserResponse(BaseModel):
     id: uuid.UUID
     email: str
     name: str
+    is_admin: bool = False
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -58,3 +60,19 @@ class UserUpdateRequest(BaseModel):
     name: str | None = Field(None, min_length=1, max_length=100)
     current_password: str | None = None
     new_password: str | None = Field(None, min_length=8)
+
+
+class AdminUserResponse(BaseModel):
+    id: uuid.UUID
+    email: str
+    name: str
+    is_admin: bool
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class AdminUserUpdateRequest(BaseModel):
+    name: str | None = Field(None, min_length=1, max_length=100)
+    email: EmailStr | None = None
+    is_admin: bool | None = None

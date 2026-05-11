@@ -46,6 +46,7 @@ services:
       - wishlist-net
     volumes:
       - ./services/user-service:/app
+      - logs-data:/logs
     restart: unless-stopped
 
   wishlist-service:
@@ -63,6 +64,7 @@ services:
     volumes:
       - ./services/wishlist-service:/app
       - uploads-data:/uploads
+      - logs-data:/logs
     restart: unless-stopped
 
   reservation-service:
@@ -79,6 +81,7 @@ services:
       - wishlist-net
     volumes:
       - ./services/reservation-service:/app
+      - logs-data:/logs
     restart: unless-stopped
 
   postgres:
@@ -123,3 +126,4 @@ volumes:
   postgres-data:
   redis-data:
   uploads-data:
+  logs-data:

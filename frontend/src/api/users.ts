@@ -4,6 +4,7 @@ export interface UserInfo {
   id: string;
   email: string;
   name: string;
+  is_admin: boolean;
 }
 
 export interface UserUpdateRequest {

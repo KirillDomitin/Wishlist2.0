@@ -93,3 +93,16 @@ class WishlistDetailResponse(BaseModel):
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class AdminWishlistResponse(BaseModel):
+    id: uuid.UUID
+    owner_id: uuid.UUID
+    title: str
+    is_public: bool
+    surprise_mode: bool
+    event_date: date | None
+    item_count: int
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)

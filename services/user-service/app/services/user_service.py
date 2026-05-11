@@ -104,7 +104,7 @@ class UserService:
         refresh_token, jti = create_refresh_token(user_id)
         await store_refresh_token(self._redis, jti, user_id)
         return TokenResponse(
-            access_token=create_access_token(user_id),
+            access_token=create_access_token(user_id, is_admin=user.is_admin),
             refresh_token=refresh_token,
         )
 
@@ -127,7 +127,7 @@ class UserService:
         refresh_token, jti = create_refresh_token(user_id)
         await store_refresh_token(self._redis, jti, user_id)
         return TokenResponse(
-            access_token=create_access_token(user_id),
+            access_token=create_access_token(user_id, is_admin=user.is_admin),
             refresh_token=refresh_token,
         )
 
@@ -147,10 +147,12 @@ class UserService:
         valid = await validate_and_rotate(self._redis, jti, user_id)
         if not valid:
             raise UnauthorizedError("Refresh token is invalid or already used")
+        user = await self._repo.get_by_id(uuid.UUID(user_id))
+        is_admin = user.is_admin if user else False
         new_refresh_token, new_jti = create_refresh_token(user_id)
         await store_refresh_token(self._redis, new_jti, user_id)
         return TokenResponse(
-            access_token=create_access_token(user_id),
+            access_token=create_access_token(user_id, is_admin=is_admin),
             refresh_token=new_refresh_token,
         )
 

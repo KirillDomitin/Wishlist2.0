@@ -1,11 +1,11 @@
 import uuid
 from datetime import date
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.models.wishlist import Wishlist
+from app.models.wishlist import Wishlist, WishlistItem
 
 
 class WishlistRepository:
@@ -77,6 +77,16 @@ class WishlistRepository:
             select(Wishlist).where(Wishlist.owner_id == owner_id)
         )
         return list(result.scalars().all())
+
+    async def get_all_with_stats(self) -> list[tuple[Wishlist, int]]:
+        """Return all wishlists paired with their item count, ordered by creation date."""
+        result = await self._session.execute(
+            select(Wishlist, func.count(WishlistItem.id).label("item_count"))
+            .outerjoin(WishlistItem, WishlistItem.wishlist_id == Wishlist.id)
+            .group_by(Wishlist.id)
+            .order_by(Wishlist.created_at.desc())
+        )
+        return [(row.Wishlist, row.item_count) for row in result.all()]
 
     async def create(
         self,

@@ -5,6 +5,7 @@ import { usersApi, type UserUpdateRequest } from "../api/users";
 interface AuthState {
   token: string | null;
   name: string | null;
+  isAdmin: boolean;
   loading: boolean;
   error: string | null;
 }
@@ -12,6 +13,7 @@ interface AuthState {
 const initialState: AuthState = {
   token: localStorage.getItem("token"),
   name: null,
+  isAdmin: false,
   loading: false,
   error: null,
 };
@@ -23,7 +25,7 @@ function saveTokens(access_token: string, refresh_token: string) {
 
 export const fetchMe = createAsyncThunk("auth/fetchMe", async () => {
   const user = await usersApi.getMe();
-  return user.name;
+  return { name: user.name, isAdmin: user.is_admin };
 });
 
 export const updateProfile = createAsyncThunk(
@@ -99,6 +101,7 @@ const authSlice = createSlice({
       }
       state.token = null;
       state.name = null;
+      state.isAdmin = false;
       localStorage.removeItem("token");
       localStorage.removeItem("refresh_token");
     },
@@ -121,7 +124,8 @@ const authSlice = createSlice({
         state.error = action.payload as string;
       })
       .addCase(fetchMe.fulfilled, (state, action) => {
-        state.name = action.payload;
+        state.name = action.payload.name;
+        state.isAdmin = action.payload.isAdmin;
       })
       .addCase(register.pending, (state) => {
         state.loading = true;

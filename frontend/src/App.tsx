@@ -11,11 +11,20 @@ import DashboardPage from "./pages/DashboardPage";
 import WishlistDetailPage from "./pages/WishlistDetailPage";
 import SharedWishlistPage from "./pages/SharedWishlistPage";
 import MyReservationsPage from "./pages/MyReservationsPage";
+import AdminPage from "./pages/AdminPage";
 import { Toaster } from "./components/ui/Toaster";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const token = useAppSelector((s) => s.auth.token);
   return token ? <>{children}</> : <Navigate to="/login" replace />;
+}
+
+function AdminRoute({ children }: { children: React.ReactNode }) {
+  const token = useAppSelector((s) => s.auth.token);
+  const isAdmin = useAppSelector((s) => s.auth.isAdmin);
+  if (!token) return <Navigate to="/login" replace />;
+  if (!isAdmin) return <Navigate to="/" replace />;
+  return <>{children}</>;
 }
 
 function AppRoutes() {
@@ -62,6 +71,14 @@ function AppRoutes() {
           <ProtectedRoute>
             <ProfilePage />
           </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin"
+        element={
+          <AdminRoute>
+            <AdminPage />
+          </AdminRoute>
         }
       />
       <Route path="*" element={<Navigate to="/" replace />} />

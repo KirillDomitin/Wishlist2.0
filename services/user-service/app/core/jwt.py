@@ -7,17 +7,18 @@ from app.core.config import settings
 from app.core.exceptions import UnauthorizedError
 
 
-def create_access_token(user_id: str) -> str:
+def create_access_token(user_id: str, is_admin: bool = False) -> str:
     """Create a signed JWT access token for the given user.
 
     Args:
         user_id: User primary key as a string.
+        is_admin: Whether the user has admin privileges.
 
     Returns:
         Encoded JWT string.
     """
     expire = datetime.now(timezone.utc) + timedelta(minutes=settings.JWT_EXPIRE_MINUTES)
-    payload = {"sub": user_id, "exp": expire, "type": "access"}
+    payload = {"sub": user_id, "exp": expire, "type": "access", "is_admin": is_admin}
     return jwt.encode(payload, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
 
 
@@ -37,14 +38,14 @@ def create_refresh_token(user_id: str) -> tuple[str, str]:
     return token, jti
 
 
-def decode_access_token(token: str) -> str:
+def decode_access_token(token: str) -> tuple[str, bool]:
     """Decode and validate a JWT access token.
 
     Args:
         token: Encoded JWT string.
 
     Returns:
-        The ``sub`` claim (user ID).
+        A ``(user_id, is_admin)`` tuple.
 
     Raises:
         UnauthorizedError: If the token is invalid, expired, or has the wrong type.
@@ -58,7 +59,8 @@ def decode_access_token(token: str) -> str:
         user_id: str | None = payload.get("sub")
         if user_id is None:
             raise UnauthorizedError()
-        return user_id
+        is_admin: bool = bool(payload.get("is_admin", False))
+        return user_id, is_admin
     except JWTError:
         raise UnauthorizedError()
 
